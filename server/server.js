@@ -66,8 +66,13 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'login.html'));
 });
 
+// ─── Handle /index.html specifically ──────────────────────────
+app.get('/index.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
+});
+
 // ─── SPA fallback for unknown routes ──────────────────────────
-app.get(/^\/(?!api\/)/, (_req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
 });
 

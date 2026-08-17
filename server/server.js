@@ -66,6 +66,11 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'login.html'));
 });
 
+// ─── SPA fallback for unknown routes ──────────────────────────
+app.get(/^\/(?!api\/)/, (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
+});
+
 // ─── Global error handler ────────────────────────────────────
 app.use(require('./middleware/errorHandler'));
 

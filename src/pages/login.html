@@ -362,7 +362,7 @@ signinBtn.addEventListener('click', () => {
   setTimeout(() => {
     setLoading(signinBtn, false);
     showToast('✓ Signed in successfully!');
-    setTimeout(() => window.location.href = 'index.html', 900);
+    setTimeout(() => window.location.href = '/pages/index.html', 900);
   }, 1200);
 });
 
@@ -408,7 +408,7 @@ signupBtn.addEventListener('click', () => {
     localStorage.removeItem('dv_seeded'); // force re-seed with new profile
     setLoading(signupBtn, false);
     showToast('✓ Account created! Welcome to DevVault 🚀');
-    setTimeout(() => window.location.href = 'index.html', 1000);
+    setTimeout(() => window.location.href = '/pages/index.html', 1000);
   }, 1400);
 });
 

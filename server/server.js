@@ -66,14 +66,14 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'login.html'));
 });
 
-// ─── Handle /index.html specifically ──────────────────────────
-app.get('/index.html', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
+// ─── Handle /home.html specifically ──────────────────────────
+app.get('/home.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'home.html'));
 });
 
 // ─── SPA fallback for unknown routes ──────────────────────────
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'home.html'));
 });
 
 // ─── Global error handler ────────────────────────────────────

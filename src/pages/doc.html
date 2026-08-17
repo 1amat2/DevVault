@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Documentation — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .doc-shell {
+      display: grid;
+      grid-template-columns: 220px 1fr 240px;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    /* Left: doc type nav */
+    .doc-nav-pane {
+      border-right: 1px solid var(--border);
+      padding: var(--gap-md);
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .doc-proj-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text-faint);
+      padding: var(--gap-sm) var(--gap-xs) 4px;
+      margin-top: var(--gap-sm);
+    }
+    .doc-nav-item {
+      display: flex; align-items: center; gap: var(--gap-sm);
+      padding: 7px 10px; border-radius: var(--r-sm);
+      font-size: .825rem; color: var(--text-muted); cursor: pointer;
+      transition: background .15s, color .15s, padding-left .15s;
+    }
+    .doc-nav-item:hover  { background: var(--elevated); color: var(--text); padding-left: 14px; }
+    .doc-nav-item.active { background: var(--primary-dim); color: var(--primary); padding-left: 14px; }
+    .doc-type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Center: markdown viewer */
+    .doc-viewer {
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .doc-viewer-header {
+      padding: var(--gap-md) var(--gap-xl);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--gap-md);
+    }
+    .doc-body {
+      padding: var(--gap-xl);
+      flex: 1;
+      max-width: 760px;
+    }
+
+    /* Markdown render styles */
+    .md h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: var(--gap-md); padding-bottom: var(--gap-sm); border-bottom: 1px solid var(--border); }
+    .md h2 { font-size: 1.15rem; font-weight: 700; margin: var(--gap-xl) 0 var(--gap-sm); color: var(--text); }
+    .md h3 { font-size: .95rem; font-weight: 600; margin: var(--gap-lg) 0 var(--gap-xs); color: var(--text); }
+    .md p  { color: var(--text-muted); font-size: .875rem; line-height: 1.8; margin-bottom: var(--gap-md); }
+    .md ul, .md ol { padding-left: 20px; margin-bottom: var(--gap-md); display: flex; flex-direction: column; gap: 6px; }
+    .md li { color: var(--text-muted); font-size: .875rem; line-height: 1.6; }
+    .md code {
+      background: var(--elevated2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #A78BFA;
+    }
+    .md pre {
+      background: var(--elevated); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--gap-md) var(--gap-lg);
+      overflow-x: auto; margin-bottom: var(--gap-md);
+      position: relative;
+    }
+    .md pre code { background: none; border: none; padding: 0; font-size: .82rem; color: #A78BFA; line-height: 1.7; }
+    .md blockquote {
+      border-left: 3px solid var(--primary); padding: var(--gap-sm) var(--gap-md);
+      background: var(--primary-dim); border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      margin-bottom: var(--gap-md);
+    }
+    .md blockquote p { color: var(--text); margin: 0; }
+    .md hr { border: none; border-top: 1px solid var(--border); margin: var(--gap-xl) 0; }
+    .md table { width: 100%; border-collapse: collapse; margin-bottom: var(--gap-md); font-size: .85rem; }
+    .md th { background: var(--elevated2); color: var(--text); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; }
+    .md td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text-muted); }
+    .md a  { color: var(--primary); }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      padding: 3px 10px; font-size: .7rem;
+      background: var(--elevated2); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text-muted); cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .copy-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+    /* Right: table of contents */
+    .doc-toc {
+      border-left: 1px solid var(--border);
+      padding: var(--gap-lg) var(--gap-md);
+      overflow-y: auto;
+    }
+    .toc-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); margin-bottom: var(--gap-sm); }
+    .toc-item {
+      display: block; padding: 4px 8px; font-size: .78rem; color: var(--text-muted);
+      border-left: 2px solid transparent; margin-bottom: 2px;
+      cursor: pointer; transition: color .15s, border-color .15s;
+    }
+    .toc-item:hover      { color: var(--text); }
+    .toc-item.active     { color: var(--primary); border-left-color: var(--primary); }
+    .toc-item.toc-h3     { padding-left: 20px; font-size: .73rem; }
+
+    @media(max-width:1100px){ .doc-shell{grid-template-columns:200px 1fr;} .doc-toc{display:none;} }
+    @media(max-width:768px) { .doc-shell{grid-template-columns:1fr;height:auto;} .doc-nav-pane{border-right:none;border-bottom:1px solid var(--border);max-height:200px;} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- STATIC SIDEBAR — renders before JS -->
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="index.html"><div class="logo-icon">&lt;/&gt;</div><span class="logo-name">DevVault</span></a>
+    <nav class="sidebar-nav">
+      <a href="index.html"     class="nav-item" data-id="dashboard"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+      <a href="projects.html"  class="nav-item" data-id="projects"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Projects</span></a>
+      <a href="tasks.html"     class="nav-item" data-id="tasks"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>Tasks</span></a>
+      <a href="notes.html"     class="nav-item" data-id="notes"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Notes</span></a>
+      <a href="doc.html"       class="nav-item active" data-id="doc"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Documentation</span></a>
+      <a href="github.html"    class="nav-item" data-id="github"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub</span></a>
+      <a href="learning.html"  class="nav-item" data-id="learning"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Learning</span></a>
+      <a href="analytics.html" class="nav-item" data-id="analytics"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg><span>Analytics</span></a>
+      <a href="ai.html"        class="nav-item" data-id="ai"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg><span>AI Assistant</span></a>
+      <a href="portfolio.html" class="nav-item" data-id="portfolio"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Portfolio</span></a>
+      <a href="settings.html"  class="nav-item" data-id="settings"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="avatar">�</div><div class="user-info"><div class="user-name">Loading�</div><div class="user-handle"></div></div><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+  </aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <h2>Documentation</h2>
+      </div>
+      <div class="flex items-center gap-sm">
+        <button class="btn btn-primary btn-sm" id="newDocBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Document
+        </button>
+      </div>
+    </header>
+
+    <div class="doc-shell">
+
+      <!-- Left: doc list -->
+      <div class="doc-nav-pane" id="docNavPane"></div>
+
+      <!-- Center: viewer -->
+      <div class="doc-viewer">
+        <div class="doc-viewer-header">
+          <div>
+            <div id="docViewTitle" style="font-weight:700;font-size:1rem">Select a document</div>
+            <div id="docViewMeta" style="font-size:.72rem;color:var(--text-faint);margin-top:2px"></div>
+          </div>
+          <div class="flex items-center gap-sm">
+            <span id="docType" class="badge badge-primary" style="font-size:.65rem"></span>
+            <button class="btn btn-ghost btn-sm" id="editDocBtn" style="display:none">Edit</button>
+          </div>
+        </div>
+        <div class="doc-body md" id="docBody">
+          <div class="empty-state" style="margin-top:60px">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:.3"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <p>Select a document from the list</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: TOC -->
+      <div class="doc-toc" id="docToc">
+        <div class="toc-label">On This Page</div>
+        <div id="tocItems"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- New Doc Modal -->
+<div class="modal-overlay" id="newDocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">New Document</h3>
+      <button class="btn btn-ghost btn-icon" id="closeDocModal">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md)">
+      <div class="form-group"><label class="form-label">Title *</label><input type="text" class="input" id="nd-title" placeholder="e.g. Architecture Overview"/></div>
+      <div class="form-group">
+        <label class="form-label">Document Type</label>
+        <select class="select" id="nd-type">
+          <option>README</option><option>Architecture</option><option>Installation</option>
+          <option>Database Schema</option><option>API Documentation</option>
+          <option>Deployment Guide</option><option>Environment Variables</option>
+          <option>Roadmap</option><option>Changelog</option><option>Troubleshooting</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project</label>
+        <select class="select" id="nd-project"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content (Markdown)</label>
+        <textarea class="textarea" id="nd-content" style="min-height:140px;font-family:'JetBrains Mono',monospace;font-size:.8rem" placeholder="# Title&#10;&#10;Start writing in Markdown..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelDocModal">Cancel</button>
+      <button class="btn btn-primary" id="saveDocBtn">Create Document</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, timeAgo, formatDate } from '../js/data.js';
+
+renderSidebar('doc');
+
+// ── Docs store ────────────────────────────────────────────────
+const DOC_TYPES = ['README','Architecture','Installation','Database Schema','API Documentation','Deployment Guide','Environment Variables','Roadmap','Changelog','Troubleshooting'];
+const TYPE_COLORS = { README:'var(--success)', Architecture:'var(--primary)', Installation:'var(--info)', 'Database Schema':'var(--warning)', 'API Documentation':'var(--info)', 'Deployment Guide':'var(--success)', 'Environment Variables':'var(--danger)', Roadmap:'var(--primary)', Changelog:'var(--text-muted)', Troubleshooting:'var(--warning)' };
+
+const SEED_DOCS = [
+  { id:'d1', projectId:'p1', title:'HomeHive README', type:'README', content:`# HomeHive\n\n> Property marketplace connecting tenants and landlords.\n\n## Overview\n\nHomeHive is a full-stack property rental platform built with Next.js and Supabase. It allows landlords to list properties and tenants to search, filter, and book viewings.\n\n## Tech Stack\n\n- **Frontend:** Next.js 14, Tailwind CSS, TypeScript\n- **Backend:** Supabase (PostgreSQL + Auth + Storage)\n- **Deployment:** Vercel\n\n## Features\n\n- Authentication (email/password, OAuth)\n- Property listings with photos\n- Advanced search and filtering\n- Real-time messaging\n- Booking system\n\n## Getting Started\n\n\`\`\`bash\ngit clone https://github.com/john/homehive\ncd homehive\nnpm install\nnpm run dev\n\`\`\`\n\n## Environment Variables\n\n\`\`\`env\nNEXT_PUBLIC_SUPABASE_URL=your_url\nNEXT_PUBLIC_SUPABASE_ANON_KEY=your_key\n\`\`\``, version:'1.0', updatedAt: new Date(Date.now()-7200000).toISOString() },
+  { id:'d2', projectId:'p1', title:'Database Architecture', type:'Architecture', content:`# Database Architecture\n\n## Overview\n\nHomeHive uses PostgreSQL via Supabase with Row Level Security (RLS) to ensure users can only access their own data.\n\n## Tables\n\n### profiles\n\n| Column | Type | Description |\n|--------|------|-------------|\n| id | UUID | References auth.users |\n| username | TEXT | Unique username |\n| display_name | TEXT | Full name |\n| bio | TEXT | Short bio |\n| avatar_url | TEXT | Profile picture URL |\n| created_at | TIMESTAMPTZ | Creation timestamp |\n\n### properties\n\n| Column | Type | Description |\n|--------|------|-------------|\n| id | UUID | Primary key |\n| owner_id | UUID | References profiles |\n| title | TEXT | Property title |\n| description | TEXT | Full description |\n| price | INTEGER | Monthly rent |\n| bedrooms | INTEGER | Number of bedrooms |\n| location | TEXT | Address |\n| is_available | BOOLEAN | Availability status |\n\n## RLS Policies\n\n\`\`\`sql\n-- Users can only read their own profile\nCREATE POLICY "read_own_profile"\nON profiles FOR SELECT\nUSING (auth.uid() = id);\n\n-- Landlords can manage their own properties\nCREATE POLICY "manage_own_properties"\nON properties FOR ALL\nUSING (auth.uid() = owner_id);\n\`\`\``, version:'1.2', updatedAt: new Date(Date.now()-86400000).toISOString() },
+  { id:'d3', projectId:'p2', title:'DevVault API Docs', type:'API Documentation', content:`# DevVault API Documentation\n\n## Base URL\n\n\`\`\`\nhttps://api.devvault.app/v1\n\`\`\`\n\n## Authentication\n\nAll endpoints require a Bearer token in the Authorization header:\n\n\`\`\`\nAuthorization: Bearer <your_token>\n\`\`\`\n\n## Endpoints\n\n### Projects\n\n#### GET /projects\n\nReturns all projects for the authenticated user.\n\n\`\`\`json\n[\n  {\n    "id": "p1",\n    "name": "HomeHive",\n    "status": "active",\n    "progress": 65\n  }\n]\n\`\`\`\n\n#### POST /projects\n\nCreate a new project.\n\n**Body:**\n\`\`\`json\n{\n  "name": "My Project",\n  "description": "Project description",\n  "status": "planning"\n}\n\`\`\`\n\n### Tasks\n\n#### GET /tasks\n\nReturns all tasks for the user.\n\n#### PATCH /tasks/:id\n\nUpdate a task status.\n\n\`\`\`json\n{\n  "status": "done"\n}\n\`\`\``, version:'0.9', updatedAt: new Date(Date.now()-172800000).toISOString() },
+  { id:'d4', projectId:'p1', title:'Deployment Guide', type:'Deployment Guide', content:`# Deployment Guide\n\n## Prerequisites\n\n- Node.js 18+\n- Vercel CLI\n- Supabase project\n\n## Steps\n\n### 1. Set up Supabase\n\n1. Create a new project at [supabase.com](https://supabase.com)\n2. Run the schema SQL from \`database/schema.sql\`\n3. Enable Row Level Security on all tables\n4. Copy your project URL and anon key\n\n### 2. Configure environment variables\n\nCreate a \`.env.local\` file:\n\n\`\`\`env\nNEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co\nNEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...\nSUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...\n\`\`\`\n\n### 3. Deploy to Vercel\n\n\`\`\`bash\nnpm i -g vercel\nvercel --prod\n\`\`\`\n\n### 4. Set environment variables in Vercel\n\nGo to your Vercel project → Settings → Environment Variables and add all variables from step 2.\n\n> **Warning:** Never commit your \`.env.local\` file to Git.`, version:'1.0', updatedAt: new Date(Date.now()-259200000).toISOString() },
+  { id:'d5', projectId:'p2', title:'Environment Variables', type:'Environment Variables', content:`# Environment Variables\n\n## DevVault Backend\n\n| Variable | Required | Description |\n|----------|----------|-------------|\n| PORT | No | Server port (default: 3001) |\n| SUPABASE_URL | Yes | Your Supabase project URL |\n| SUPABASE_SERVICE_ROLE_KEY | Yes | Service role key (keep secret!) |\n| OPENAI_API_KEY | No | OpenAI key for AI features |\n| GITHUB_CLIENT_ID | No | GitHub OAuth app client ID |\n| GITHUB_CLIENT_SECRET | No | GitHub OAuth app client secret |\n\n## Security Rules\n\n- **Never** commit secrets to Git\n- Use \`.env.example\` for documentation (no real values)\n- Use \`.gitignore\` to exclude \`.env\` files\n- Rotate keys if accidentally exposed\n\n## Example .env.example\n\n\`\`\`env\nPORT=3001\nSUPABASE_URL=https://your-project.supabase.co\nSUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here\nOPENAI_API_KEY=your_openai_key_here\nGITHUB_CLIENT_ID=your_github_client_id\nGITHUB_CLIENT_SECRET=your_github_client_secret\n\`\`\``, version:'1.0', updatedAt: new Date(Date.now()-432000000).toISOString() },
+];
+
+function loadDocs() { try { const r = localStorage.getItem('dv_docs'); return r ? JSON.parse(r) : null; } catch { return null; } }
+function saveDocs(d) { try { localStorage.setItem('dv_docs', JSON.stringify(d)); } catch {} }
+let docs = loadDocs() || SEED_DOCS;
+if (!loadDocs()) saveDocs(docs);
+
+let activeDoc = null;
+
+// ── Populate project select ───────────────────────────────────
+Projects.all().forEach(p => {
+  document.getElementById('nd-project').insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name}</option>`);
+});
+
+// ── Render nav ────────────────────────────────────────────────
+function renderNav() {
+  const pane = document.getElementById('docNavPane');
+  pane.innerHTML = '';
+  const byProject = {};
+  docs.forEach(d => { (byProject[d.projectId] = byProject[d.projectId]||[]).push(d); });
+
+  Object.entries(byProject).forEach(([pid, pdocs]) => {
+    const proj = Projects.get(pid);
+    pane.insertAdjacentHTML('beforeend', `<div class="doc-proj-label">${proj ? proj.icon+' '+proj.name : 'General'}</div>`);
+    pdocs.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'doc-nav-item' + (activeDoc?.id === d.id ? ' active' : '');
+      item.dataset.id = d.id;
+      item.innerHTML = `
+        <div class="doc-type-dot" style="background:${TYPE_COLORS[d.type]||'var(--primary)'}"></div>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</span>`;
+      item.addEventListener('click', () => openDoc(d));
+      pane.appendChild(item);
+    });
+  });
+}
+
+// ── Open doc ──────────────────────────────────────────────────
+function openDoc(d) {
+  activeDoc = d;
+  renderNav();
+  document.getElementById('docViewTitle').textContent = d.title;
+  document.getElementById('docViewMeta').textContent  = `v${d.version} · Updated ${timeAgo(d.updatedAt)}`;
+  document.getElementById('docType').textContent      = d.type;
+  document.getElementById('docType').style.cssText    = `font-size:.65rem;background:${TYPE_COLORS[d.type]||'var(--primary)'}20;color:${TYPE_COLORS[d.type]||'var(--primary)'};border:1px solid ${TYPE_COLORS[d.type]||'var(--primary)'}40`;
+  document.getElementById('editDocBtn').style.display = 'inline-flex';
+  renderMarkdown(d.content);
+  buildTOC();
+}
+
+// ── Markdown renderer (basic) ─────────────────────────────────
+function renderMarkdown(md) {
+  let html = md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // code blocks
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>${code.trim()}</code></pre>`)
+    // inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // headings
+    .replace(/^### (.+)$/gm, '<h3 id="$1">$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2 id="$1">$1</h2>')
+    .replace(/^# (.+)$/gm,   '<h1 id="$1">$1</h1>')
+    // bold / italic
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    // blockquote
+    .replace(/^&gt; (.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+    // hr
+    .replace(/^---$/gm, '<hr>')
+    // unordered list
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    // ordered list
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // table rows (simple)
+    .replace(/^\|(.+)\|$/gm, (_, row) => {
+      const cells = row.split('|').map(c=>c.trim());
+      if (cells.every(c => /^[-:]+$/.test(c))) return '';
+      return '<tr>' + cells.map(c=>`<td>${c}</td>`).join('') + '</tr>';
+    })
+    // links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    // paragraphs
+    .replace(/\n\n/g, '</p><p>')
+    // wrap li groups
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+
+  // Wrap table rows
+  html = html.replace(/(<tr>.*<\/tr>\n?)+/g, m => `<table>${m}</table>`);
+
+  document.getElementById('docBody').innerHTML = `<div class="md"><p>${html}</p></div>`;
+}
+
+// ── TOC builder ───────────────────────────────────────────────
+function buildTOC() {
+  const toc = document.getElementById('tocItems');
+  toc.innerHTML = '';
+  document.getElementById('docBody').querySelectorAll('h1,h2,h3').forEach(h => {
+    const item = document.createElement('a');
+    item.className = 'toc-item' + (h.tagName === 'H3' ? ' toc-h3' : '');
+    item.textContent = h.textContent;
+    item.addEventListener('click', () => h.scrollIntoView({ behavior:'smooth' }));
+    toc.appendChild(item);
+  });
+}
+
+window.copyCode = function(btn) {
+  const code = btn.parentElement.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1800);
+  });
+};
+
+// ── New doc modal ─────────────────────────────────────────────
+document.getElementById('newDocBtn').addEventListener('click', () => document.getElementById('newDocModal').classList.add('open'));
+document.getElementById('closeDocModal').addEventListener('click', () => document.getElementById('newDocModal').classList.remove('open'));
+document.getElementById('cancelDocModal').addEventListener('click', () => document.getElementById('newDocModal').classList.remove('open'));
+
+document.getElementById('saveDocBtn').addEventListener('click', () => {
+  const title = document.getElementById('nd-title').value.trim();
+  if (!title) return;
+  const d = {
+    id: 'd' + Date.now(),
+    title,
+    type:      document.getElementById('nd-type').value,
+    projectId: document.getElementById('nd-project').value,
+    content:   document.getElementById('nd-content').value,
+    version:   '1.0',
+    updatedAt: new Date().toISOString(),
+  };
+  docs.unshift(d);
+  saveDocs(docs);
+  document.getElementById('newDocModal').classList.remove('open');
+  renderNav();
+  openDoc(d);
+});
+
+renderNav();
+// Open first doc by default
+if (docs.length) openDoc(docs[0]);
+</script>
+</body>
+</html>

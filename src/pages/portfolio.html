@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .portfolio-hero {
+      background: linear-gradient(135deg, rgba(124,92,255,.12) 0%, rgba(59,130,246,.06) 50%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+      padding: var(--gap-xl) var(--gap-xl) var(--gap-lg);
+    }
+    .hero-inner { display:flex; align-items:center; gap:var(--gap-xl); flex-wrap:wrap; }
+    .hero-avatar {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: var(--primary-dim); border: 3px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: var(--primary);
+      flex-shrink: 0; box-shadow: 0 0 30px rgba(124,92,255,.3);
+    }
+    .hero-info { flex: 1; }
+    .hero-name  { font-size: 1.8rem; font-weight: 800; }
+    .hero-title { font-size: 1rem; color: var(--primary); font-weight: 600; margin-top: 2px; }
+    .hero-bio   { font-size: .875rem; color: var(--text-muted); margin-top: 8px; max-width: 500px; line-height: 1.6; }
+    .hero-links { display:flex; gap:var(--gap-sm); margin-top:var(--gap-md); flex-wrap:wrap; }
+    .hero-link {
+      display:flex; align-items:center; gap:6px; padding:6px 14px;
+      background: var(--elevated); border:1px solid var(--border); border-radius:var(--r-full);
+      font-size: .8rem; color: var(--text-muted); text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+    .hero-link:hover { border-color:var(--primary); color:var(--primary); }
+    .stats-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--gap-md); padding: var(--gap-md) var(--gap-xl); border-bottom:1px solid var(--border); background:var(--surface); }
+    .strip-stat { text-align:center; }
+    .strip-val  { font-size:1.6rem; font-weight:800; color:var(--text); }
+    .strip-lbl  { font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+    .section-header { display:flex; align-items:center; gap:var(--gap-md); margin-bottom:var(--gap-lg); }
+    .section-header h3 { font-size:1rem; font-weight:700; }
+    .skill-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 12px; border-radius:var(--r-full);
+      background:var(--elevated); border:1px solid var(--border);
+      font-size:.8rem; font-weight:500; color:var(--text-muted);
+    }
+    .skill-dot { width:8px; height:8px; border-radius:50%; }
+    .portfolio-proj-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+      padding:var(--gap-md); display:flex; flex-direction:column; gap:var(--gap-sm);
+      text-decoration:none; color:inherit;
+      transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .portfolio-proj-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,.4); border-color:var(--border-light); }
+    .achievement {
+      display:flex; flex-direction:column; align-items:center; gap:var(--gap-sm);
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+      padding:var(--gap-lg); text-align:center;
+    }
+    .achievement-icon { font-size:2rem; }
+    .achievement-name { font-size:.85rem; font-weight:700; color:var(--text); }
+    .achievement-desc { font-size:.75rem; color:var(--text-muted); }
+    .heatmap-section { overflow-x:auto; }
+    @media(max-width:900px){ .stats-strip{grid-template-columns:1fr 1fr;} }
+    @media(max-width:600px){ .hero-inner{flex-direction:column;align-items:flex-start;} .stats-strip{grid-template-columns:1fr 1fr;} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="index.html"><div class="logo-icon">&lt;/&gt;</div><span class="logo-name">DevVault</span></a>
+    <nav class="sidebar-nav">
+      <a href="index.html"     class="nav-item" data-id="dashboard"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+      <a href="projects.html"  class="nav-item" data-id="projects"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Projects</span></a>
+      <a href="tasks.html"     class="nav-item" data-id="tasks"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>Tasks</span></a>
+      <a href="notes.html"     class="nav-item" data-id="notes"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Notes</span></a>
+      <a href="doc.html"       class="nav-item" data-id="doc"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Documentation</span></a>
+      <a href="github.html"    class="nav-item" data-id="github"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub</span></a>
+      <a href="learning.html"  class="nav-item" data-id="learning"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Learning</span></a>
+      <a href="analytics.html" class="nav-item" data-id="analytics"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg><span>Analytics</span></a>
+      <a href="ai.html"        class="nav-item" data-id="ai"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg><span>AI Assistant</span></a>
+      <a href="portfolio.html" class="nav-item active" data-id="portfolio"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Portfolio</span></a>
+      <a href="settings.html"  class="nav-item" data-id="settings"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="avatar">�</div><div class="user-info"><div class="user-name">Loading�</div><div class="user-handle"></div></div><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+  </aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <h2>Portfolio</h2>
+      </div>
+      <div class="flex items-center gap-sm">
+        <button class="btn btn-ghost btn-sm" id="editPortfolioBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          Edit Profile
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="portfolio-hero page-body" id="portfolioHero">
+      <div class="hero-inner">
+        <div class="hero-avatar" id="heroAvatar">\u2026</div>
+        <div class="hero-info">
+          <div class="hero-name"  id="heroName">Loading\u2026</div>
+          <div class="hero-title" id="heroTitle">Student Developer</div>
+          <div class="hero-bio"   id="heroBio">Building software. Learning by building.</div>
+          <div class="hero-links" id="heroLinks"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="strip-stat"><div class="strip-val" id="ps-projects">0</div><div class="strip-lbl">Projects</div></div>
+      <div class="strip-stat"><div class="strip-val" id="ps-done">0</div><div class="strip-lbl">Completed</div></div>
+      <div class="strip-stat"><div class="strip-val" id="ps-tasks">0</div><div class="strip-lbl">Tasks Done</div></div>
+      <div class="strip-stat"><div class="strip-val" id="ps-streak">0</div><div class="strip-lbl">Day Streak 🔥</div></div>
+    </div>
+
+    <div class="page-content" style="display:flex;flex-direction:column;gap:var(--gap-xl)">
+
+      <!-- Projects -->
+      <section>
+        <div class="section-header">
+          <h3>Projects</h3>
+          <div class="flex items-center gap-sm" style="margin-left:auto">
+            <button class="tab-filter active" data-vis="all">All</button>
+            <button class="tab-filter" data-vis="public">Public</button>
+          </div>
+        </div>
+        <div class="grid-auto" id="portfolioProjects"></div>
+      </section>
+
+      <!-- Skills -->
+      <section>
+        <div class="section-header"><h3>Skills &amp; Technologies</h3></div>
+        <div style="display:flex;flex-direction:column;gap:var(--gap-md)" id="skillsList"></div>
+      </section>
+
+      <!-- Learning -->
+      <section>
+        <div class="section-header"><h3>Currently Learning</h3></div>
+        <div class="grid-3" id="portfolioLearning"></div>
+      </section>
+
+      <!-- GitHub Activity -->
+      <section>
+        <div class="section-header">
+          <h3>GitHub Activity</h3>
+          <span style="font-size:.78rem;color:var(--text-faint);margin-left:auto" id="contribCount"></span>
+        </div>
+        <div class="card">
+          <div class="heatmap-section"><div id="portfolioHeatmap"></div></div>
+        </div>
+      </section>
+
+      <!-- Achievements -->
+      <section>
+        <div class="section-header"><h3>Achievements</h3></div>
+        <div class="grid-4" id="achievements"></div>
+      </section>
+
+      <!-- Contact -->
+      <section>
+        <div class="section-header"><h3>Contact</h3></div>
+        <div class="card" style="display:flex;gap:var(--gap-lg);flex-wrap:wrap;align-items:center">
+          <p id="contactBio" style="flex:1;min-width:200px"></p>
+          <div class="flex items-center gap-sm flex-wrap" id="contactLinks"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, Tasks, Profile, Stats, timeAgo } from '../js/data.js';
+
+renderSidebar('portfolio');
+
+// ── Load data ─────────────────────────────────────────────────
+const profile  = Profile.get();
+const stats    = Stats.compute();
+const projects = Projects.all();
+const initials = profile.name.split(' ').map(w=>w[0]).join('').toUpperCase();
+
+// ── Hero ──────────────────────────────────────────────────────
+document.getElementById('heroAvatar').textContent = initials;
+document.getElementById('heroName').textContent   = profile.name;
+document.getElementById('heroBio').textContent    = profile.bio || 'Building software. Learning by building.';
+
+const links = document.getElementById('heroLinks');
+if (profile.github) links.insertAdjacentHTML('beforeend',`<a class="hero-link" href="${profile.github}" target="_blank"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</a>`);
+if (profile.website) links.insertAdjacentHTML('beforeend',`<a class="hero-link" href="${profile.website}" target="_blank"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Website</a>`);
+if (profile.email) links.insertAdjacentHTML('beforeend',`<button class="hero-link" onclick="navigator.clipboard.writeText('${profile.email}');this.textContent='Copied!'"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${profile.email}</button>`);
+if (profile.location) links.insertAdjacentHTML('beforeend',`<span class="hero-link"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${profile.location}</span>`);
+
+// ── Animated counters ─────────────────────────────────────────
+function animCount(el, target, dur=800) {
+  if (!el) return;
+  const s = performance.now();
+  function step(n){ const t=Math.min((n-s)/dur,1); el.textContent=Math.round((1-Math.pow(1-t,3))*target); if(t<1)requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+}
+setTimeout(()=>{
+  animCount(document.getElementById('ps-projects'), projects.length);
+  animCount(document.getElementById('ps-done'),     projects.filter(p=>p.status==='completed').length);
+  animCount(document.getElementById('ps-tasks'),    stats.doneTasks, 1000);
+  animCount(document.getElementById('ps-streak'),   stats.streak, 1200);
+},200);
+
+// ── Projects ──────────────────────────────────────────────────
+const statusColors={active:'#22C55E',hold:'#F59E0B',completed:'#7C5CFF',planning:'#3B82F6'};
+const badgeMap={active:'badge-success',hold:'badge-warning',completed:'badge-muted',planning:'badge-info'};
+const cont = document.getElementById('portfolioProjects');
+projects.forEach((p,i)=>{
+  const a = document.createElement('a');
+  a.href = `project.html?id=${p.id}`;
+  a.className = 'portfolio-proj-card anim-fade-up';
+  a.style.animationDelay = (i*.07)+'s';
+  a.innerHTML=`
+    <div class="flex items-center gap-sm">
+      <div style="width:38px;height:38px;border-radius:var(--r-md);background:${p.color}20;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${p.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.9rem;font-weight:700;color:var(--text)">${p.name}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">${p.category||'Web'}</div>
+      </div>
+      <span class="badge ${badgeMap[p.status]||'badge-muted'}" style="font-size:.6rem">${p.status}</span>
+    </div>
+    <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5">${p.description.substring(0,80)}${p.description.length>80?'…':''}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">${(p.tech||[]).slice(0,3).map(t=>`<span class="tag" style="font-size:.65rem">${t}</span>`).join('')}</div>
+    <div>
+      <div class="flex items-center justify-between" style="margin-bottom:4px">
+        <span style="font-size:.7rem;color:var(--text-muted)">Progress</span>
+        <span style="font-size:.72rem;font-weight:700;color:${p.color||'var(--primary)'}">${p.progress}%</span>
+      </div>
+      <div class="progress-bar"><div class="fill" style="width:${p.progress}%;background:${p.color||'var(--primary)'}"></div></div>
+    </div>`;
+  cont.appendChild(a);
+});
+
+// ── Skills ────────────────────────────────────────────────────
+const SKILLS=[
+  {name:'JavaScript',pct:85,color:'#F7DF1E'},{name:'HTML & CSS',pct:90,color:'#E34F26'},
+  {name:'Node.js',pct:75,color:'#68A063'},{name:'Python',pct:70,color:'#3776AB'},
+  {name:'Supabase',pct:65,color:'#3ECF8E'},{name:'SQL',pct:80,color:'#336791'},
+  {name:'TypeScript',pct:55,color:'#3B82F6'},{name:'Git',pct:85,color:'#F05032'},
+  {name:'Docker',pct:45,color:'#2496ED'},
+];
+const sl = document.getElementById('skillsList');
+SKILLS.forEach((s,i)=>{
+  const row = document.createElement('div');
+  row.className = 'anim-fade-up';
+  row.style.animationDelay = (i*.05)+'s';
+  row.innerHTML=`
+    <div class="flex items-center gap-md" style="margin-bottom:5px">
+      <span style="font-size:.85rem;font-weight:500;width:120px">${s.name}</span>
+      <span style="font-size:.75rem;color:var(--text-faint);margin-left:auto">${s.pct}%</span>
+    </div>
+    <div class="progress-bar progress-bar-lg"><div class="fill" style="width:${s.pct}%;background:${s.color}"></div></div>`;
+  sl.appendChild(row);
+});
+
+// ── Learning ──────────────────────────────────────────────────
+const lItems = JSON.parse(localStorage.getItem('dv_learning')||'[]').filter(l=>l.status==='in-progress').slice(0,3);
+const lc = document.getElementById('portfolioLearning');
+lItems.forEach((l,i)=>{
+  lc.insertAdjacentHTML('beforeend',`
+    <div class="card anim-fade-up" style="animation-delay:${i*.08}s">
+      <div class="flex items-center gap-sm" style="margin-bottom:var(--gap-sm)">
+        <span style="font-size:1.4rem">${l.icon||'📚'}</span>
+        <div><div style="font-weight:600">${l.tech}</div><div style="font-size:.72rem;color:var(--text-muted)">${l.desc||''}</div></div>
+      </div>
+      <div class="progress-bar progress-bar-lg"><div class="fill" style="width:${l.progress}%;background:${l.color||'var(--primary)'}"></div></div>
+      <div style="font-size:.72rem;color:var(--text-muted);margin-top:4px">${l.progress}% complete</div>
+    </div>`);
+});
+if (!lItems.length) lc.innerHTML='<p class="text-muted" style="grid-column:span 3">No active learning goals.</p>';
+
+// ── GitHub Heatmap ────────────────────────────────────────────
+const hm = document.getElementById('portfolioHeatmap');
+const g = document.createElement('div');
+g.style.cssText='display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;gap:3px;';
+let total=0;
+for(let i=0;i<52*7;i++){const r=Math.random();const l=r<.42?0:r<.58?1:r<.73?2:r<.88?3:4;total+=l;const c=document.createElement('div');c.className='heatmap-cell'+(l>0?` l${l}`:'');c.style.cssText='width:12px;height:12px;border-radius:2px;';c.title=`${l} contributions`;g.appendChild(c);}
+hm.appendChild(g);
+document.getElementById('contribCount').textContent=total+' contributions in the last year';
+
+// ── Achievements ──────────────────────────────────────────────
+const achs=[
+  {icon:'🔥',name:'12 Day Streak',desc:'Coded 12 days in a row'},
+  {icon:'🚀',name:'First Project',desc:'Created your first project'},
+  {icon:'✅',name:'100 Tasks Done',desc:'Completed 100+ tasks'},
+  {icon:'📝',name:'Note Taker',desc:'Written 5+ notes'},
+  {icon:'🌟',name:'Active Builder',desc:'4+ active projects'},
+  {icon:'🎓',name:'Lifelong Learner',desc:'Tracking 8+ technologies'},
+];
+const ac = document.getElementById('achievements');
+achs.forEach((a,i)=>{
+  ac.insertAdjacentHTML('beforeend',`
+    <div class="achievement anim-pop-in" style="animation-delay:${i*.06}s">
+      <div class="achievement-icon">${a.icon}</div>
+      <div class="achievement-name">${a.name}</div>
+      <div class="achievement-desc">${a.desc}</div>
+    </div>`);
+});
+
+// ── Contact ───────────────────────────────────────────────────
+document.getElementById('contactBio').textContent = profile.bio || 'Open to collaborations and new opportunities.';
+const cl = document.getElementById('contactLinks');
+if (profile.github) cl.insertAdjacentHTML('beforeend',`<a class="btn btn-ghost btn-sm" href="${profile.github}" target="_blank">GitHub</a>`);
+if (profile.email)  cl.insertAdjacentHTML('beforeend',`<button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText('${profile.email}');this.textContent='Copied!'">Copy Email</button>`);
+
+// Filter tabs
+document.querySelectorAll('[data-vis]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-vis]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+/* ─── Responsive Tweaks ──────────────────────────── */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 200px; }
+  .page-content { padding: var(--gap-md) var(--gap-lg); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .page-header {
+    padding: var(--gap-sm) var(--gap-md);
+    flex-wrap: wrap;
+    gap: var(--gap-sm);
+  }
+  .page-content { padding: var(--gap-sm) var(--gap-md); }
+  h1 { font-size: 1.35rem; }
+  h2 { font-size: 1.1rem; }
+
+  /* Dashboard */
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .col-span-2, .col-span-3 { grid-column: span 1; }
+
+  /* Notes */
+  .notes-shell { display: flex; flex-direction: column; height: auto; }
+  .notes-cat-pane { display: flex; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); }
+
+  /* Kanban horizontal scroll hint */
+  .kanban-wrap::after {
+    content: '← scroll →';
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    padding: 4px;
+  }
+  .kanban-col { min-width: 220px; }
+
+  /* Settings */
+  .settings-shell { grid-template-columns: 1fr; }
+  .settings-nav-pane { flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); padding: var(--gap-sm); }
+  .settings-content-pane { padding: var(--gap-md); }
+
+  /* Analytics */
+  .analytics-grid { grid-template-columns: 1fr; }
+
+  /* Chat */
+  .chat-messages { padding: var(--gap-md); }
+  .chat-input-area { padding: var(--gap-sm) var(--gap-md); }
+
+  /* Cards */
+  .card { padding: var(--gap-md); }
+  .stat-card { padding: var(--gap-sm) var(--gap-md); }
+}
+
+/* Small mobile */
+@media (max-width: 420px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .btn { padding: 7px 12px; font-size: 0.78rem; }
+  .badge { font-size: 0.6rem; padding: 1px 5px; }
+  .quick-actions { gap: 4px; }
+  .quick-btn { font-size: 0.72rem; padding: 5px 10px; }
+}

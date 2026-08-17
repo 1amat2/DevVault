@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learning — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .learning-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--gap-lg);
+      display: flex; flex-direction: column; gap: var(--gap-md);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      cursor: default;
+    }
+    .learning-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,.4); border-color:var(--border-light); }
+    .tech-icon-lg { width:46px;height:46px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0; }
+    .progress-label { display:flex;align-items:center;justify-content:space-between;margin-bottom:5px; }
+    .add-learning-card {
+      background: transparent;
+      border: 2px dashed var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--gap-xl);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--gap-sm);
+      cursor: pointer; color: var(--text-faint);
+      transition: border-color .2s, color .2s, background .2s;
+      font-size: .85rem;
+    }
+    .add-learning-card:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-dim); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <div>
+          <h2>Learning Tracker</h2>
+          <p style="margin:0;font-size:.75rem">Track your developer learning journey</p>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="addLearningBtn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Goal
+      </button>
+    </header>
+
+    <div class="page-content page-body">
+      <!-- Summary stats -->
+      <div class="grid-4 stagger" style="margin-bottom:var(--gap-lg)">
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--primary)">
+          <div class="stat-label">Technologies</div>
+          <div class="stat-value" id="ls-total">0</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--success)">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value" id="ls-done">0</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--info)">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-value" id="ls-progress">0</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--warning)">
+          <div class="stat-label">Avg Progress</div>
+          <div class="stat-value" id="ls-avg">0%</div>
+        </div>
+      </div>
+
+      <div class="grid-auto" id="learningGrid"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Learning Modal -->
+<div class="modal-overlay" id="learningModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Learning Goal</h3>
+      <button class="btn btn-ghost btn-icon" id="closeLearningModal">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md)">
+      <div class="form-group"><label class="form-label">Technology *</label><input type="text" class="input" id="lt-tech" placeholder="e.g. TypeScript"/></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="textarea" id="lt-desc" style="min-height:70px" placeholder="What are you learning?"></textarea></div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="select" id="lt-status">
+            <option value="in-progress">In Progress</option>
+            <option value="planned">Planned</option>
+            <option value="completed">Completed</option>
+            <option value="exploring">Exploring</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Progress %</label>
+          <input type="number" class="input" id="lt-progress" min="0" max="100" value="0" placeholder="0"/>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Icon (emoji)</label><input type="text" class="input" id="lt-icon" placeholder="📚" maxlength="2" style="width:70px"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelLearningModal">Cancel</button>
+      <button class="btn btn-primary" id="saveLearningBtn">Add Goal</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+
+renderSidebar('learning');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+// ── Data (localStorage-backed) ────────────────────────────────
+const SEED_LEARNING = [
+  { id:'l1', tech:'JavaScript', desc:'Advanced concepts: closures, prototypes, async patterns', status:'in-progress', progress:80, icon:'🟨', color:'#F7DF1E' },
+  { id:'l2', tech:'Python',     desc:'Data analysis, automation, and scripting', status:'in-progress', progress:70, icon:'🐍', color:'#3776AB' },
+  { id:'l3', tech:'Supabase',   desc:'Auth, RLS, real-time subscriptions, storage', status:'in-progress', progress:60, icon:'⚡', color:'#3ECF8E' },
+  { id:'l4', tech:'TypeScript', desc:'Type system, generics, utility types', status:'planned', progress:25, icon:'📘', color:'#3B82F6' },
+  { id:'l5', tech:'C#',         desc:'Object-oriented programming, .NET framework', status:'planned', progress:40, icon:'🔵', color:'#00599C' },
+  { id:'l6', tech:'SQL',        desc:'Queries, joins, indexes, PostgreSQL', status:'completed', progress:100, icon:'🗄️', color:'#336791' },
+  { id:'l7', tech:'Docker',     desc:'Containers, Compose, deployment workflows', status:'in-progress', progress:45, icon:'🐳', color:'#2496ED' },
+  { id:'l8', tech:'Rust',       desc:'Systems programming, memory safety', status:'exploring', progress:10, icon:'🦀', color:'#CE422B' },
+];
+
+function loadItems() {
+  try {
+    const raw = localStorage.getItem('dv_learning');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveItems(items) {
+  try { localStorage.setItem('dv_learning', JSON.stringify(items)); } catch {}
+}
+
+let items = loadItems() || SEED_LEARNING;
+if (!loadItems()) saveItems(items);
+
+// ── Stats ─────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('ls-total').textContent    = items.length;
+  document.getElementById('ls-done').textContent     = items.filter(i=>i.status==='completed').length;
+  document.getElementById('ls-progress').textContent = items.filter(i=>i.status==='in-progress').length;
+  const avg = items.length ? Math.round(items.reduce((s,i)=>s+i.progress,0)/items.length) : 0;
+  document.getElementById('ls-avg').textContent = avg + '%';
+}
+
+// ── Render ────────────────────────────────────────────────────
+const statusBadge = { 'in-progress':'badge-success','planned':'badge-warning','completed':'badge-muted','exploring':'badge-info' };
+const statusLabel = { 'in-progress':'In Progress','planned':'Planned','completed':'Completed','exploring':'Exploring' };
+
+function render() {
+  updateStats();
+  const grid = document.getElementById('learningGrid');
+  grid.innerHTML = '';
+
+  items.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'learning-card anim-fade-up';
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.innerHTML = `
+      <div class="flex items-center gap-md">
+        <div class="tech-icon-lg" style="background:${item.color}20">${item.icon || '📚'}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:.95rem">${item.tech}</div>
+          <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">${item.desc}</div>
+        </div>
+        <span class="badge ${statusBadge[item.status]||'badge-muted'}" style="font-size:.6rem">${statusLabel[item.status]||item.status}</span>
+      </div>
+      <div>
+        <div class="progress-label">
+          <span style="font-size:.78rem;color:var(--text-muted)">Progress</span>
+          <span style="font-size:.8rem;font-weight:700;color:${item.color}">${item.progress}%</span>
+        </div>
+        <div class="progress-bar progress-bar-lg" style="background:var(--elevated2)">
+          <div class="fill" data-pct="${item.progress}" style="width:0%;background:${item.color};transition:width 1s cubic-bezier(.22,.68,0,1.2) ${i*.07}s"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-sm" style="margin-top:auto">
+        <input type="range" min="0" max="100" value="${item.progress}" data-id="${item.id}"
+          style="flex:1;accent-color:${item.color};cursor:pointer;height:4px" class="progress-slider"/>
+        <button class="btn btn-ghost btn-icon-sm" data-del="${item.id}" title="Remove" style="color:var(--text-faint)">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  // Add card button
+  const addCard = document.createElement('div');
+  addCard.className = 'add-learning-card anim-fade-up';
+  addCard.style.animationDelay = (items.length * 0.06) + 's';
+  addCard.innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Technology`;
+  addCard.addEventListener('click', () => document.getElementById('learningModal').classList.add('open'));
+  grid.appendChild(addCard);
+
+  // Animate progress bars after render
+  setTimeout(() => {
+    grid.querySelectorAll('.fill[data-pct]').forEach(fill => {
+      fill.style.width = fill.dataset.pct + '%';
+    });
+  }, 80);
+
+  // Range slider live update
+  grid.querySelectorAll('.progress-slider').forEach(slider => {
+    slider.addEventListener('input', e => {
+      const id = e.target.dataset.id;
+      const val = parseInt(e.target.value, 10);
+      items = items.map(i => i.id === id ? {...i, progress: val} : i);
+      saveItems(items);
+      render();
+    });
+  });
+
+  // Delete
+  grid.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.del;
+      if (!confirm('Remove this learning goal?')) return;
+      items = items.filter(i => i.id !== id);
+      saveItems(items);
+      render();
+    });
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+document.getElementById('addLearningBtn').addEventListener('click', () => document.getElementById('learningModal').classList.add('open'));
+document.getElementById('closeLearningModal').addEventListener('click', () => document.getElementById('learningModal').classList.remove('open'));
+document.getElementById('cancelLearningModal').addEventListener('click', () => document.getElementById('learningModal').classList.remove('open'));
+
+document.getElementById('saveLearningBtn').addEventListener('click', () => {
+  const tech = document.getElementById('lt-tech').value.trim();
+  if (!tech) { document.getElementById('lt-tech').style.borderColor='var(--danger)'; return; }
+  items.push({
+    id: 'l' + Date.now(),
+    tech,
+    desc:     document.getElementById('lt-desc').value.trim(),
+    status:   document.getElementById('lt-status').value,
+    progress: parseInt(document.getElementById('lt-progress').value,10)||0,
+    icon:     document.getElementById('lt-icon').value.trim() || '📚',
+    color:    '#7C5CFF',
+  });
+  saveItems(items);
+  document.getElementById('learningModal').classList.remove('open');
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Project — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .proj-hero {
+      padding: var(--gap-lg) var(--gap-xl);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .proj-hero-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--gap-lg); flex-wrap: wrap;
+    }
+    .proj-title { font-size: 1.65rem; font-weight: 800; color: var(--text); }
+    .info-row {
+      display: flex; align-items: center; gap: var(--gap-lg);
+      flex-wrap: wrap; margin-top: 12px;
+    }
+    .info-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .78rem; color: var(--text-muted);
+    }
+    .info-item a { color: var(--primary); }
+    .progress-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 200px; }
+    .pct-big { font-size: 1.8rem; font-weight: 800; color: var(--text); }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 290px; gap: var(--gap-lg); margin-top: var(--gap-lg); }
+    .tech-grid   { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tech-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--elevated2); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: 6px 12px;
+      font-size: .8rem; font-weight: 500; color: var(--text-muted);
+      transition: border-color .15s, color .15s;
+    }
+    .tech-chip:hover { border-color: var(--border-light); color: var(--text); }
+    .tech-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Tasks mini kanban */
+    .mini-kanban { display: flex; gap: var(--gap-sm); overflow-x: auto; padding-bottom: var(--gap-sm); }
+    .mini-col { min-width: 160px; }
+    .mini-col-title { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
+    .mini-task {
+      background: var(--elevated); border: 1px solid var(--border); border-radius: var(--r-sm);
+      padding: 7px 10px; font-size: .78rem; color: var(--text); margin-bottom: 5px;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .mini-task:hover { border-color: var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeUp .3s ease both; }
+
+    @media(max-width:900px){ .detail-grid{grid-template-columns:1fr;} .progress-right{align-items:flex-start;} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <!-- Project Hero -->
+    <div class="proj-hero page-body" id="projHero">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="page-content" id="tabContents">
+      <!-- filled by JS -->
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, Tasks, Notes, Activity, timeAgo, formatDate, statusBadge, priorityColor } from '../js/data.js';
+
+renderSidebar('projects');
+
+document.getElementById('menuToggle') && document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+// ── Load project from URL ─────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const id = params.get('id') || Projects.all()[0]?.id;
+const p  = Projects.get(id);
+
+if (!p) {
+  document.getElementById('projHero').innerHTML = `<div style="padding:var(--gap-xl);text-align:center"><p>Project not found.</p><a href="projects.html" class="btn btn-ghost btn-sm" style="margin-top:12px">← Back to Projects</a></div>`;
+} else {
+  document.title = `${p.name} — DevVault`;
+  renderHero(p);
+  renderTabs(p);
+}
+
+// ── Render hero ───────────────────────────────────────────────
+function renderHero(p) {
+  const badge = { active:'badge-success', hold:'badge-warning', completed:'badge-muted', planning:'badge-info' };
+  const badgeLabel = { active:'In Progress', hold:'On Hold', completed:'Completed', planning:'Planning' };
+  const hero = document.getElementById('projHero');
+
+  hero.innerHTML = `
+    <div style="margin-bottom:12px">
+      <a href="projects.html" class="flex items-center gap-xs text-muted" style="font-size:.8rem;display:inline-flex;transition:color .15s" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Projects
+      </a>
+    </div>
+
+    <div class="proj-hero-top">
+      <div style="flex:1">
+        <div class="flex items-center gap-md flex-wrap">
+          <span style="font-size:1.8rem">${p.icon || '📁'}</span>
+          <h1 class="proj-title">${p.name}</h1>
+          <span class="badge ${badge[p.status]||'badge-muted'} badge-dot">${badgeLabel[p.status]||p.status}</span>
+          <button class="btn btn-ghost btn-sm" id="editProjBtn" style="margin-left:auto">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Edit
+          </button>
+        </div>
+        <p style="margin-top:8px;font-size:.875rem;max-width:600px">${p.description}</p>
+        <div class="info-row">
+          ${p.repo ? `<div class="info-item"><svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><a href="${p.repo}" target="_blank">Repository</a></div>` : ''}
+          ${p.live ? `<div class="info-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><a href="${p.live}" target="_blank">Live Site</a></div>` : ''}
+          <div class="info-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Updated ${timeAgo(p.updatedAt)}</div>
+          <div class="info-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Started ${formatDate(p.createdAt)}</div>
+        </div>
+      </div>
+
+      <div class="progress-right">
+        <div style="font-size:.75rem;color:var(--text-muted);font-weight:500">Overall Progress</div>
+        <div class="pct-big" style="color:${p.color||'var(--primary)'}">${p.progress}%</div>
+        <div class="progress-bar progress-bar-lg" style="width:210px">
+          <div class="fill" style="width:${p.progress}%;background:${p.color||'var(--primary)'}"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="margin-top:var(--gap-lg);border-bottom:none">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="tasks">Tasks</button>
+      <button class="tab" data-tab="notes">Notes</button>
+      <button class="tab" data-tab="activity">Activity</button>
+      <button class="tab" data-tab="settings-p">Settings</button>
+    </div>`;
+
+  document.getElementById('editProjBtn')?.addEventListener('click', () => {
+    window.location.href = `projects.html`;
+  });
+}
+
+// ── Render tabs ───────────────────────────────────────────────
+function renderTabs(p) {
+  const tasks   = Tasks.forProject(p.id);
+  const notes   = Notes.all().filter(n => n.category === p.name || n.content.toLowerCase().includes(p.name.toLowerCase())).slice(0,3);
+  const activity = Activity.all().filter(a => a.projectId === p.id).slice(0,8);
+
+  const done    = tasks.filter(t => t.status === 'done').length;
+  const ip      = tasks.filter(t => t.status === 'in-progress').length;
+  const todo    = tasks.filter(t => t.status === 'todo' || t.status === 'backlog').length;
+  const review  = tasks.filter(t => t.status === 'review').length;
+  const total   = tasks.length;
+  const circ    = 2 * Math.PI * 38;
+
+  const techColors = { 'Next.js':'#000','Supabase':'#3ECF8E','Tailwind CSS':'#06B6D4','TypeScript':'#3B82F6','Vercel':'#EF4444','HTML':'#E34F26','CSS':'#264de4','JavaScript':'#F7DF1E','Node.js':'#68A063','Python':'#3776AB','Django':'#092E20','PostgreSQL':'#336791','MongoDB':'#47A248','Express':'#8B8B98','React':'#61DAFB','Vue':'#4FC08D','FastAPI':'#009688','FFmpeg':'#007808','Pandas':'#150458' };
+
+  const statusGroups = ['backlog','todo','in-progress','review','done'];
+  const groupLabels  = { backlog:'Backlog', todo:'Todo', 'in-progress':'In Progress', review:'Review', done:'Done' };
+  const groupColors  = { backlog:'#8B8B98', todo:'var(--info)', 'in-progress':'var(--primary)', review:'var(--warning)', done:'var(--success)' };
+
+  const pBadge = { critical:'priority-critical', high:'priority-high', medium:'priority-medium', low:'priority-low' };
+
+  document.getElementById('tabContents').innerHTML = `
+    <!-- Overview -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="detail-grid">
+        <div style="display:flex;flex-direction:column;gap:var(--gap-lg)">
+          <div class="card anim-fade-up">
+            <h4 style="margin-bottom:var(--gap-md)">About This Project</h4>
+            <p style="line-height:1.7">${p.description}</p>
+            <div style="margin-top:var(--gap-md)">
+              <div style="font-size:.72rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Category</div>
+              <span class="badge badge-info">${p.category || 'Web'}</span>
+            </div>
+          </div>
+          <div class="card anim-fade-up" style="animation-delay:.08s">
+            <h4 style="margin-bottom:var(--gap-md)">Tech Stack</h4>
+            <div class="tech-grid">
+              ${(p.tech||[]).map(t => `<div class="tech-chip"><div class="tech-dot" style="background:${techColors[t]||'var(--primary)'}"></div>${t}</div>`).join('')}
+            </div>
+          </div>
+          ${activity.length ? `<div class="card anim-fade-up" style="animation-delay:.12s">
+            <h4 style="margin-bottom:var(--gap-md)">Recent Activity</h4>
+            ${activity.slice(0,5).map(a=>`
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--primary)"></div>
+                <div class="activity-text" style="flex:1">${a.text}</div>
+                <span class="activity-time">${timeAgo(a.time)}</span>
+              </div>`).join('')}
+          </div>` : ''}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--gap-lg)">
+          <!-- Tasks Donut -->
+          <div class="card anim-fade-up" style="animation-delay:.06s">
+            <h4 style="margin-bottom:var(--gap-md)">Tasks Overview</h4>
+            ${total > 0 ? `
+            <div style="display:flex;align-items:center;gap:var(--gap-lg)">
+              <div style="position:relative;width:100px;height:100px;flex-shrink:0">
+                <svg id="taskDonut" width="100" height="100" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="var(--elevated2)" stroke-width="14"/>
+                </svg>
+                <div class="donut-center-text">
+                  <div class="donut-center-value" style="font-size:1.2rem">${total}</div>
+                  <div class="donut-center-label">tasks</div>
+                </div>
+              </div>
+              <div class="chart-legend" id="taskLegend"></div>
+            </div>` : `<p>No tasks yet. <a href="tasks.html" class="text-primary">Add tasks →</a></p>`}
+          </div>
+
+          <!-- Project Info -->
+          <div class="card anim-fade-up" style="animation-delay:.1s">
+            <h4 style="margin-bottom:var(--gap-md)">Project Info</h4>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:.8rem">
+                <span class="text-muted">Status</span>
+                <span class="badge ${badge[p.status]||'badge-muted'}" style="font-size:.65rem">${badgeLabel[p.status]||p.status}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.8rem"><span class="text-muted">Started</span><span>${formatDate(p.createdAt)}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:.8rem"><span class="text-muted">Updated</span><span>${timeAgo(p.updatedAt)}</span></div>
+              ${p.repo ? `<div style="display:flex;justify-content:space-between;font-size:.8rem"><span class="text-muted">Repo</span><a href="${p.repo}" target="_blank" class="text-primary" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.repo.replace('https://','')}</a></div>` : ''}
+              ${p.live ? `<div style="display:flex;justify-content:space-between;font-size:.8rem"><span class="text-muted">Live</span><a href="${p.live}" target="_blank" class="text-primary">${p.live.replace('https://','')}</a></div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div class="tab-content" id="tab-tasks">
+      ${total > 0 ? `
+      <div style="display:flex;gap:var(--gap-md);overflow-x:auto;padding-bottom:var(--gap-sm)">
+        ${statusGroups.map(s => {
+          const colTasks = tasks.filter(t => t.status === s);
+          return `<div class="mini-col">
+            <div class="mini-col-title" style="color:${groupColors[s]}">${groupLabels[s]} <span style="opacity:.6">(${colTasks.length})</span></div>
+            ${colTasks.map(t => `<div class="mini-task"><div style="font-size:.8rem;font-weight:500;margin-bottom:4px">${t.title}</div><span class="badge ${pBadge[t.priority]||'badge-muted'}" style="font-size:.58rem">${t.priority}</span></div>`).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:var(--gap-md)"><a href="tasks.html" class="btn btn-ghost btn-sm">Open full task board →</a></div>` :
+      `<div class="empty-state"><p>No tasks yet.</p><a href="tasks.html" class="btn btn-primary btn-sm" style="margin-top:12px">Open Task Board</a></div>`}
+    </div>
+
+    <!-- Notes Tab -->
+    <div class="tab-content" id="tab-notes">
+      ${notes.length > 0 ? `
+      <div style="display:flex;flex-direction:column;gap:var(--gap-sm)">
+        ${notes.map(n=>`
+          <div class="card hover-lift" style="cursor:pointer" onclick="window.location.href='notes.html'">
+            <div style="font-size:.9rem;font-weight:600">${n.title}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px">${n.content.replace(/[#*\`]/g,'').substring(0,100)}…</div>
+            <div style="margin-top:6px;display:flex;gap:6px;align-items:center"><span class="tag" style="font-size:.65rem">${n.category}</span><span style="font-size:.68rem;color:var(--text-faint)">${timeAgo(n.updatedAt)}</span></div>
+          </div>`).join('')}
+      </div>` :
+      `<div class="empty-state"><p>No related notes found.</p><a href="notes.html" class="btn btn-ghost btn-sm" style="margin-top:12px">Go to Notes</a></div>`}
+    </div>
+
+    <!-- Activity Tab -->
+    <div class="tab-content" id="tab-activity">
+      ${activity.length > 0 ? `
+      <div class="card" style="max-width:600px">
+        ${activity.map(a=>`<div class="activity-item anim-fade-up"><div class="activity-dot" style="background:var(--primary)"></div><div class="activity-text" style="flex:1"><strong>${a.text}</strong></div><span class="activity-time">${timeAgo(a.time)}</span></div>`).join('')}
+      </div>` :
+      `<div class="empty-state"><p>No activity yet.</p></div>`}
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="tab-settings-p">
+      <div class="card" style="max-width:500px;display:flex;flex-direction:column;gap:var(--gap-md)">
+        <h4>Project Settings</h4>
+        <div class="form-group"><label class="form-label">Project Name</label><input type="text" class="input" id="sp-name" value="${p.name}"/></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="select" id="sp-status">
+            ${['active','planning','hold','completed','archived'].map(s=>`<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Progress %</label><input type="number" class="input" id="sp-progress" min="0" max="100" value="${p.progress}"/></div>
+        <div style="display:flex;gap:var(--gap-sm)">
+          <button class="btn btn-primary btn-sm" id="saveSettingsBtn">Save Changes</button>
+          <button class="btn btn-sm" style="color:var(--danger);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2)" id="deleteProjBtn">Delete Project</button>
+        </div>
+      </div>
+    </div>`;
+
+  // ── Draw tasks donut ────────────────────────────────────────
+  if (total > 0) {
+    const segments = [
+      { label:'Done',        val:done,   color:'#22C55E' },
+      { label:'In Progress', val:ip,     color:'#7C5CFF' },
+      { label:'Todo',        val:todo,   color:'#3B82F6' },
+      { label:'Review',      val:review, color:'#F59E0B' },
+    ].filter(s => s.val > 0);
+
+    const svg    = document.getElementById('taskDonut');
+    const legend = document.getElementById('taskLegend');
+    let offset   = 0;
+    const r      = 38, c = 2*Math.PI*r;
+
+    segments.forEach(seg => {
+      const dash = (seg.val / total) * c;
+      const arc  = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      arc.setAttribute('cx','50'); arc.setAttribute('cy','50'); arc.setAttribute('r',r);
+      arc.setAttribute('fill','none'); arc.setAttribute('stroke',seg.color); arc.setAttribute('stroke-width','14');
+      arc.style.cssText = `stroke-dasharray:${dash} ${c};stroke-dashoffset:${-offset};`;
+      arc.setAttribute('transform','rotate(-90 50 50)');
+      arc.classList.add('donut-arc');
+      svg?.appendChild(arc);
+      offset += dash;
+
+      const pct = Math.round(seg.val/total*100);
+      legend?.insertAdjacentHTML('beforeend',`
+        <div class="legend-item"><div class="legend-dot" style="background:${seg.color}"></div>
+          <span style="flex:1;color:var(--text-muted);font-size:.78rem">${seg.label}</span>
+          <span style="font-weight:600;font-size:.78rem">${seg.val} (${pct}%)</span>
+        </div>`);
+    });
+  }
+
+  // ── Tab switching ───────────────────────────────────────────
+  const badge = { active:'badge-success', hold:'badge-warning', completed:'badge-muted', planning:'badge-info' };
+  const badgeLabel = { active:'In Progress', hold:'On Hold', completed:'Completed', planning:'Planning' };
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab)?.classList.add('active');
+    });
+  });
+
+  // ── Settings save ───────────────────────────────────────────
+  document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
+    const Projects_module = window.__Projects;
+    Projects.update(p.id, {
+      name:     document.getElementById('sp-name').value.trim(),
+      status:   document.getElementById('sp-status').value,
+      progress: parseInt(document.getElementById('sp-progress').value,10) || 0,
+    });
+    location.reload();
+  });
+
+  document.getElementById('deleteProjBtn')?.addEventListener('click', () => {
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    Projects.delete(p.id);
+    window.location.href = 'projects.html';
+  });
+}
+</script>
+</body>
+</html>

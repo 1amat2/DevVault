@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .board-wrap { overflow-x:auto; padding-bottom:var(--gap-xl); }
+    .kanban-board { display:flex; gap:var(--gap-md); align-items:flex-start; min-width:min-content; }
+    .kanban-col { width:255px; flex-shrink:0; display:flex; flex-direction:column; gap:var(--gap-sm); }
+    .col-header {
+      display:flex; align-items:center; gap:var(--gap-sm);
+      padding:8px 4px; margin-bottom:4px;
+    }
+    .col-title { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; flex:1; }
+    .col-count { background:var(--elevated2); color:var(--text-muted); font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:var(--r-full); }
+    .col-stripe { width:3px; height:18px; border-radius:2px; flex-shrink:0; }
+    .cards-zone {
+      display:flex; flex-direction:column; gap:8px;
+      min-height:60px; border-radius:var(--r-md);
+      transition:background .2s, box-shadow .2s;
+      padding:2px;
+    }
+    .cards-zone.drag-over { background:var(--primary-dim); box-shadow:inset 0 0 0 2px rgba(124,92,255,.35); }
+    .task-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+      padding:10px 12px; cursor:grab; user-select:none;
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, opacity .15s ease;
+      animation:fadeUp .3s ease both;
+    }
+    .task-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.4); border-color:var(--border-light); }
+    .task-card:active { cursor:grabbing; }
+    .task-card.dragging { opacity:.4; transform:scale(.97); }
+    .task-card.ghost { border:2px dashed var(--primary); background:var(--primary-dim); opacity:.6; }
+    .card-title { font-size:.825rem; font-weight:500; color:var(--text); line-height:1.45; margin-bottom:7px; }
+    .card-meta  { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .card-project { font-size:.68rem; color:var(--text-faint); }
+    .add-card-btn {
+      width:100%; padding:8px; border:1px dashed var(--border); border-radius:var(--r-sm);
+      color:var(--text-faint); font-size:.78rem; text-align:center;
+      transition:all .15s;
+    }
+    .add-card-btn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-dim); }
+    /* col accent colors */
+    .col-backlog  .col-title { color:var(--text-muted); }
+    .col-todo     .col-title { color:var(--info); }
+    .col-progress .col-title { color:var(--primary); }
+    .col-review   .col-title { color:var(--warning); }
+    .col-done     .col-title { color:var(--success); }
+    .done-card { opacity:.6; }
+    .done-card .card-title { text-decoration:line-through; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <div>
+          <h2>Task Board</h2>
+          <p style="margin:0;font-size:.72rem;color:var(--text-muted)" id="board-subtitle">All Projects</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-sm">
+        <select class="select" id="projectFilter" style="width:160px;font-size:.8rem">
+          <option value="all">All Projects</option>
+        </select>
+        <button class="btn btn-primary" id="addTaskBtn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Task
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content page-body">
+      <div class="board-wrap">
+        <div class="kanban-board" id="kanbanBoard"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add / Edit Task Modal -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="taskModalTitle">Add Task</h3>
+      <button class="btn btn-ghost btn-icon" id="closeTaskModal">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md)">
+      <input type="hidden" id="edit-task-id"/>
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" class="input" id="ft-title" placeholder="Task title"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="textarea" id="ft-desc" style="min-height:70px" placeholder="Optional details…"></textarea>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="select" id="ft-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="select" id="ft-status">
+            <option value="backlog">Backlog</option>
+            <option value="todo" selected>Todo</option>
+            <option value="in-progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Project</label>
+          <select class="select" id="ft-project"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" class="input" id="ft-due"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="deleteTaskBtn" style="margin-right:auto;display:none;color:var(--danger)">Delete</button>
+      <button class="btn btn-ghost" id="cancelTaskModal">Cancel</button>
+      <button class="btn btn-primary" id="saveTask">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Tasks, Projects, timeAgo, formatDate } from '../js/data.js';
+
+renderSidebar('tasks');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+const COLS = [
+  { id:'backlog',     label:'Backlog',     color:'#8B8B98' },
+  { id:'todo',        label:'Todo',        color:'var(--info)' },
+  { id:'in-progress', label:'In Progress', color:'var(--primary)' },
+  { id:'review',      label:'Review',      color:'var(--warning)' },
+  { id:'done',        label:'Done',        color:'var(--success)' },
+];
+
+const pBadge = { critical:'priority-critical', high:'priority-high', medium:'priority-medium', low:'priority-low' };
+
+// ── Populate project filter ───────────────────────────────────
+const projFilter = document.getElementById('projectFilter');
+const projForTask = document.getElementById('ft-project');
+Projects.all().forEach(p => {
+  projFilter.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name}</option>`);
+  projForTask.insertAdjacentHTML('beforeend',`<option value="${p.id}">${p.name}</option>`);
+});
+
+let activeProject = 'all';
+projFilter.addEventListener('change', () => {
+  activeProject = projFilter.value;
+  document.getElementById('board-subtitle').textContent =
+    activeProject === 'all' ? 'All Projects' : Projects.get(activeProject)?.name || '';
+  renderBoard();
+});
+
+// ── Drag state ────────────────────────────────────────────────
+let dragged = null;
+
+// ── Render board ──────────────────────────────────────────────
+function renderBoard() {
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '';
+
+  let tasks = Tasks.all();
+  if (activeProject !== 'all') tasks = tasks.filter(t => t.projectId === activeProject);
+
+  COLS.forEach(col => {
+    const colTasks = tasks.filter(t => t.status === col.id);
+    const colEl = document.createElement('div');
+    colEl.className = `kanban-col col-${col.id === 'in-progress' ? 'progress' : col.id}`;
+    colEl.innerHTML = `
+      <div class="col-header">
+        <div class="col-stripe" style="background:${col.color}"></div>
+        <span class="col-title">${col.label}</span>
+        <span class="col-count" id="cnt-${col.id}">${colTasks.length}</span>
+      </div>
+      <div class="cards-zone" data-col="${col.id}" id="zone-${col.id}"></div>
+      <button class="add-card-btn" data-col="${col.id}">+ Add card</button>`;
+    board.appendChild(colEl);
+
+    const zone = colEl.querySelector('.cards-zone');
+    colTasks.forEach((t, i) => {
+      const proj = Projects.get(t.projectId);
+      const card = document.createElement('div');
+      card.className = 'task-card' + (t.status === 'done' ? ' done-card' : '');
+      card.dataset.id = t.id;
+      card.draggable = true;
+      card.style.animationDelay = (i * 0.05) + 's';
+      card.innerHTML = `
+        <div class="card-title">${t.title}</div>
+        <div class="card-meta">
+          <span class="badge ${pBadge[t.priority]||'badge-muted'}" style="font-size:.62rem">${t.priority}</span>
+          ${t.dueDate ? `<span style="font-size:.68rem;color:var(--text-faint)">📅 ${formatDate(t.dueDate)}</span>` : ''}
+          ${proj ? `<span class="card-project">${proj.name}</span>` : ''}
+        </div>`;
+
+      // Drag events
+      card.addEventListener('dragstart', e => {
+        dragged = card;
+        setTimeout(() => card.classList.add('dragging'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.cards-zone').forEach(z => z.classList.remove('drag-over'));
+        dragged = null;
+      });
+
+      // Click to edit
+      card.addEventListener('click', () => openEditTask(t));
+
+      zone.appendChild(card);
+    });
+
+    // Drop zone events
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (!dragged) return;
+      const newStatus = zone.dataset.col;
+      const taskId = dragged.dataset.id;
+      Tasks.move(taskId, newStatus);
+      renderBoard();
+      showToast(`Moved to ${col.label}`, 'success');
+    });
+
+    // Quick add
+    colEl.querySelector('.add-card-btn').addEventListener('click', () => {
+      document.getElementById('ft-status').value = col.id;
+      openModal();
+    });
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal()  { document.getElementById('taskModal').classList.add('open'); }
+function closeModal() {
+  document.getElementById('taskModal').classList.remove('open');
+  document.getElementById('edit-task-id').value = '';
+  document.getElementById('ft-title').value = '';
+  document.getElementById('ft-desc').value  = '';
+  document.getElementById('ft-priority').value = 'medium';
+  document.getElementById('ft-status').value   = 'todo';
+  document.getElementById('ft-due').value       = '';
+  document.getElementById('deleteTaskBtn').style.display = 'none';
+  document.getElementById('saveTask').textContent = 'Add Task';
+  document.getElementById('taskModalTitle').textContent = 'Add Task';
+}
+
+function openEditTask(t) {
+  document.getElementById('edit-task-id').value = t.id;
+  document.getElementById('ft-title').value     = t.title;
+  document.getElementById('ft-desc').value      = t.description || '';
+  document.getElementById('ft-priority').value  = t.priority;
+  document.getElementById('ft-status').value    = t.status;
+  document.getElementById('ft-project').value   = t.projectId || '';
+  document.getElementById('ft-due').value       = t.dueDate || '';
+  document.getElementById('deleteTaskBtn').style.display = 'inline-flex';
+  document.getElementById('saveTask').textContent = 'Save Changes';
+  document.getElementById('taskModalTitle').textContent = 'Edit Task';
+  openModal();
+}
+
+document.getElementById('addTaskBtn').addEventListener('click', () => { closeModal(); openModal(); });
+document.getElementById('closeTaskModal').addEventListener('click', closeModal);
+document.getElementById('cancelTaskModal').addEventListener('click', closeModal);
+document.getElementById('taskModal').addEventListener('click', e => { if (e.target.id === 'taskModal') closeModal(); });
+
+document.getElementById('saveTask').addEventListener('click', () => {
+  const title = document.getElementById('ft-title').value.trim();
+  if (!title) { document.getElementById('ft-title').style.borderColor='var(--danger)'; return; }
+  document.getElementById('ft-title').style.borderColor = '';
+
+  const data = {
+    title,
+    description: document.getElementById('ft-desc').value.trim(),
+    priority:    document.getElementById('ft-priority').value,
+    status:      document.getElementById('ft-status').value,
+    projectId:   document.getElementById('ft-project').value,
+    dueDate:     document.getElementById('ft-due').value || null,
+  };
+
+  const editId = document.getElementById('edit-task-id').value;
+  if (editId) { Tasks.update(editId, data); showToast('Task updated ✓','success'); }
+  else        { Tasks.create(data);         showToast('Task created ✓','success'); }
+  closeModal();
+  renderBoard();
+});
+
+document.getElementById('deleteTaskBtn').addEventListener('click', () => {
+  const id = document.getElementById('edit-task-id').value;
+  if (!id) return;
+  Tasks.delete(id);
+  closeModal();
+  renderBoard();
+  showToast('Task deleted','error');
+});
+
+function showToast(msg, type='info') {
+  const colors = {info:'var(--primary)',success:'var(--success)',error:'var(--danger)'};
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--elevated2);border:1px solid var(--border);border-left:3px solid ${colors[type]||colors.info};border-radius:var(--r-md);padding:12px 18px;font-size:.85rem;color:var(--text);box-shadow:var(--shadow-lg);`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('hide'); setTimeout(()=>el.remove(),300); }, 2500);
+}
+
+renderBoard();
+</script>
+</body>
+</html>

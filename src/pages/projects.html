@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Projects — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .project-row {
+      display:flex;align-items:center;gap:var(--gap-md);
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+      padding:var(--gap-md) var(--gap-lg);
+      transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+      cursor:pointer;text-decoration:none;color:inherit;
+      animation:fadeUp .35s ease both;
+    }
+    .project-row:hover { transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.4);border-color:var(--border-light); }
+    .proj-icon-big { width:44px;height:44px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;transition:transform .2s cubic-bezier(.22,.68,0,1.2); }
+    .project-row:hover .proj-icon-big { transform:scale(1.12) rotate(-4deg); }
+    .proj-body { flex:1;min-width:0; }
+    .proj-name { font-size:.9rem;font-weight:600;color:var(--text); }
+    .proj-desc { font-size:.78rem;color:var(--text-muted);margin-top:2px; }
+    .proj-tags { display:flex;gap:4px;margin-top:6px;flex-wrap:wrap; }
+    .proj-right { display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:120px; }
+    .proj-more { color:var(--text-faint);padding:5px;border-radius:var(--r-sm);transition:color .15s,background .15s; }
+    .proj-more:hover { color:var(--text);background:var(--elevated2); }
+    .empty-projects { text-align:center;padding:var(--gap-2xl);color:var(--text-faint); }
+    #projectsList.loading .project-row { pointer-events:none; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <h2>Projects</h2>
+      </div>
+      <div class="flex items-center gap-sm">
+        <div class="input-wrap">
+          <span class="input-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input type="text" class="input input-icon-left" placeholder="Search projects…" id="searchInput" style="width:220px"/>
+        </div>
+        <button class="btn btn-primary" id="newProjectBtn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Project
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content page-body">
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-sm" style="margin-bottom:var(--gap-lg);flex-wrap:wrap" id="filterTabs">
+        <button class="tab-filter active" data-filter="all">All <span id="cnt-all" class="note-cat-count">0</span></button>
+        <button class="tab-filter" data-filter="active">Active <span id="cnt-active" class="note-cat-count">0</span></button>
+        <button class="tab-filter" data-filter="hold">On Hold <span id="cnt-hold" class="note-cat-count">0</span></button>
+        <button class="tab-filter" data-filter="completed">Completed <span id="cnt-completed" class="note-cat-count">0</span></button>
+        <button class="tab-filter" data-filter="planning">Planning <span id="cnt-planning" class="note-cat-count">0</span></button>
+      </div>
+      <div id="projectsList" style="display:flex;flex-direction:column;gap:var(--gap-sm)"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New / Edit Project Modal -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">New Project</h3>
+      <button class="btn btn-ghost btn-icon" id="closeModal">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md)">
+      <input type="hidden" id="editId"/>
+      <div class="form-group">
+        <label class="form-label">Project Name *</label>
+        <input type="text" class="input" id="f-name" placeholder="e.g. HomeHive"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="textarea" id="f-desc" placeholder="What are you building?" style="min-height:80px"></textarea>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="select" id="f-status">
+            <option value="active">Active</option>
+            <option value="planning">Planning</option>
+            <option value="hold">On Hold</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="select" id="f-category">
+            <option>Web</option><option>Mobile</option><option>Desktop</option><option>Game</option><option>AI</option><option>Backend</option><option>DevOps</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tech Stack <span style="color:var(--text-faint);font-weight:400">(comma separated)</span></label>
+        <input type="text" class="input" id="f-tech" placeholder="e.g. HTML, CSS, JavaScript"/>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Repository URL</label>
+          <input type="url" class="input" id="f-repo" placeholder="https://github.com/…"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Live URL</label>
+          <input type="url" class="input" id="f-live" placeholder="https://…"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Icon (emoji)</label>
+        <input type="text" class="input" id="f-icon" placeholder="🚀" maxlength="2" style="width:80px"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="deleteProjectBtn" style="margin-right:auto;display:none;color:var(--danger)">Delete project</button>
+      <button class="btn btn-ghost" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary" id="saveProject">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, timeAgo, statusBadge, priorityColor } from '../js/data.js';
+
+renderSidebar('projects');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+let currentFilter = 'all';
+let searchQuery   = '';
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('projectsList');
+  let projects = Projects.all();
+
+  // Update counts
+  document.getElementById('cnt-all').textContent       = projects.length;
+  document.getElementById('cnt-active').textContent    = projects.filter(p=>p.status==='active').length;
+  document.getElementById('cnt-hold').textContent      = projects.filter(p=>p.status==='hold').length;
+  document.getElementById('cnt-completed').textContent = projects.filter(p=>p.status==='completed').length;
+  document.getElementById('cnt-planning').textContent  = projects.filter(p=>p.status==='planning').length;
+
+  // Filter
+  if (currentFilter !== 'all') projects = projects.filter(p => p.status === currentFilter);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    projects = projects.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      (p.tech||[]).join(' ').toLowerCase().includes(q)
+    );
+  }
+
+  list.innerHTML = '';
+  if (!projects.length) {
+    list.innerHTML = `<div class="empty-projects"><p>No projects found.</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="document.getElementById('newProjectBtn').click()">Create one</button></div>`;
+    return;
+  }
+
+  const statusColors = {active:'#22C55E',hold:'#F59E0B',completed:'#7C5CFF',planning:'#3B82F6',archived:'#8B8B98'};
+  const badgeMap = {active:'badge-success',hold:'badge-warning',completed:'badge-muted',planning:'badge-info',archived:'badge-muted'};
+
+  projects.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'project-row';
+    row.style.animationDelay = (i * 0.06) + 's';
+    row.dataset.id = p.id;
+    row.innerHTML = `
+      <div class="proj-icon-big" style="background:${p.color||'#7C5CFF'}20">${p.icon||'📁'}</div>
+      <div class="proj-body">
+        <div class="proj-name">${p.name}</div>
+        <div class="proj-desc">${p.description}</div>
+        <div class="proj-tags">${(p.tech||[]).slice(0,4).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="proj-right">
+        <span class="badge ${badgeMap[p.status]||'badge-muted'} badge-dot">${p.status}</span>
+        <span style="font-size:.85rem;font-weight:700">${p.progress}%</span>
+        <div class="progress-bar" style="width:120px">
+          <div class="fill" style="width:${p.progress}%;background:${statusColors[p.status]||'var(--primary)'}"></div>
+        </div>
+        <span style="font-size:.7rem;color:var(--text-faint)">${timeAgo(p.updatedAt)}</span>
+      </div>
+      <button class="proj-more edit-btn" data-id="${p.id}">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </button>`;
+
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.edit-btn')) return;
+      window.location.href = `project.html?id=${p.id}`;
+    });
+    row.querySelector('.edit-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEditModal(p);
+    });
+    list.appendChild(row);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal() { document.getElementById('projectModal').classList.add('open'); }
+function closeModal() {
+  document.getElementById('projectModal').classList.remove('open');
+  document.getElementById('editId').value = '';
+  ['f-name','f-desc','f-tech','f-repo','f-live','f-icon'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'active';
+  document.getElementById('deleteProjectBtn').style.display = 'none';
+  document.getElementById('saveProject').textContent = 'Create Project';
+  document.getElementById('modalTitle').textContent = 'New Project';
+}
+
+function openEditModal(p) {
+  document.getElementById('editId').value     = p.id;
+  document.getElementById('f-name').value     = p.name;
+  document.getElementById('f-desc').value     = p.description;
+  document.getElementById('f-status').value   = p.status;
+  document.getElementById('f-category').value = p.category || 'Web';
+  document.getElementById('f-tech').value     = (p.tech||[]).join(', ');
+  document.getElementById('f-repo').value     = p.repo || '';
+  document.getElementById('f-live').value     = p.live || '';
+  document.getElementById('f-icon').value     = p.icon || '';
+  document.getElementById('deleteProjectBtn').style.display = 'inline-flex';
+  document.getElementById('saveProject').textContent = 'Save Changes';
+  document.getElementById('modalTitle').textContent = 'Edit Project';
+  openModal();
+}
+
+document.getElementById('newProjectBtn').addEventListener('click', () => { closeModal(); openModal(); });
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('cancelModal').addEventListener('click', closeModal);
+document.getElementById('projectModal').addEventListener('click', e => { if (e.target.id === 'projectModal') closeModal(); });
+
+document.getElementById('saveProject').addEventListener('click', () => {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').style.borderColor='var(--danger)'; return; }
+  document.getElementById('f-name').style.borderColor = '';
+
+  const data = {
+    name,
+    description: document.getElementById('f-desc').value.trim(),
+    status:      document.getElementById('f-status').value,
+    category:    document.getElementById('f-category').value,
+    tech:        document.getElementById('f-tech').value.split(',').map(s=>s.trim()).filter(Boolean),
+    repo:        document.getElementById('f-repo').value.trim(),
+    live:        document.getElementById('f-live').value.trim(),
+    icon:        document.getElementById('f-icon').value.trim() || '📁',
+    color:       '#7C5CFF',
+  };
+
+  const editId = document.getElementById('editId').value;
+  if (editId) {
+    Projects.update(editId, data);
+    showToast('Project updated ✓', 'success');
+  } else {
+    Projects.create(data);
+    showToast('Project created ✓', 'success');
+  }
+  closeModal();
+  render();
+});
+
+document.getElementById('deleteProjectBtn').addEventListener('click', () => {
+  const id = document.getElementById('editId').value;
+  if (!id) return;
+  if (!confirm('Delete this project? This cannot be undone.')) return;
+  Projects.delete(id);
+  closeModal();
+  render();
+  showToast('Project deleted', 'error');
+});
+
+// ── Filter ────────────────────────────────────────────────────
+document.querySelectorAll('.tab-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  render();
+});
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const colors = {info:'var(--primary)',success:'var(--success)',error:'var(--danger)'};
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--elevated2);border:1px solid var(--border);border-left:3px solid ${colors[type]||colors.info};border-radius:var(--r-md);padding:12px 18px;font-size:.85rem;color:var(--text);box-shadow:var(--shadow-lg);`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('hide'); setTimeout(()=>el.remove(),300); }, 2800);
+}
+
+render();
+</script>
+</body>
+</html>

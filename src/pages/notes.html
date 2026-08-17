@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notes — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .notes-root {
+      display: grid;
+      grid-template-columns: 190px 270px 1fr;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+    /* Category pane */
+    .cat-pane { border-right:1px solid var(--border); padding:var(--gap-md) var(--gap-sm); overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+    .cat-item {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px; border-radius:var(--r-sm); cursor:pointer;
+      font-size:.825rem; color:var(--text-muted);
+      transition:background .15s, color .15s, padding-left .15s;
+    }
+    .cat-item:hover  { background:var(--elevated); color:var(--text); padding-left:14px; }
+    .cat-item.active { background:var(--primary-dim); color:var(--primary); padding-left:14px; }
+    .cat-count { font-size:.7rem; background:var(--elevated2); padding:1px 6px; border-radius:var(--r-full); }
+
+    /* Notes list pane */
+    .list-pane { border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+    .list-search { padding:var(--gap-sm) var(--gap-md); border-bottom:1px solid var(--border); }
+    .notes-items { flex:1; overflow-y:auto; }
+    .note-item {
+      padding:var(--gap-md); border-bottom:1px solid var(--border); cursor:pointer;
+      transition:background .15s, padding-left .15s, border-left-color .15s;
+      border-left:2px solid transparent;
+    }
+    .note-item:hover  { background:var(--elevated); padding-left:calc(var(--gap-md) + 4px); }
+    .note-item.active { background:var(--elevated2); border-left-color:var(--primary); padding-left:calc(var(--gap-md) + 4px); }
+    .ni-title   { font-size:.875rem; font-weight:600; color:var(--text); }
+    .ni-preview { font-size:.78rem; color:var(--text-muted); margin-top:2px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ni-meta    { display:flex; align-items:center; gap:var(--gap-sm); margin-top:5px; }
+    .ni-time    { font-size:.68rem; color:var(--text-faint); }
+
+    /* Editor pane */
+    .editor-pane { display:flex; flex-direction:column; overflow:hidden; }
+    .editor-head {
+      padding:var(--gap-md) var(--gap-lg); border-bottom:1px solid var(--border);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:var(--gap-md);
+    }
+    .editor-toolbar {
+      display:flex; align-items:center; gap:2px;
+      padding:var(--gap-xs) var(--gap-md); border-bottom:1px solid var(--border);
+      flex-wrap:wrap; background:var(--surface);
+    }
+    .tbtn {
+      width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+      border-radius:var(--r-sm); font-size:.78rem; font-weight:700; color:var(--text-muted);
+      transition:background .12s, color .12s;
+    }
+    .tbtn:hover { background:var(--elevated2); color:var(--text); }
+    .tdivider { width:1px; height:18px; background:var(--border); margin:0 3px; }
+    .editor-body { flex:1; display:grid; grid-template-columns:1fr 185px; overflow:hidden; }
+    .editor-text-wrap { flex:1; overflow-y:auto; padding:var(--gap-lg); }
+    .editor-textarea {
+      width:100%; height:100%; min-height:400px; resize:none;
+      background:none; border:none; outline:none; color:var(--text);
+      font-family:'JetBrains Mono','Fira Code','Courier New',monospace;
+      font-size:.84rem; line-height:1.85;
+    }
+    .info-pane {
+      border-left:1px solid var(--border); padding:var(--gap-md);
+      overflow-y:auto; display:flex; flex-direction:column; gap:var(--gap-md);
+      background:var(--surface);
+    }
+    .info-row { font-size:.78rem; }
+    .info-row .lbl { color:var(--text-faint); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+    .info-row .val { color:var(--text-muted); }
+    .no-note-selected { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-faint); gap:var(--gap-md); }
+    .save-indicator { font-size:.72rem; color:var(--success); opacity:0; transition:opacity .3s; }
+    .save-indicator.show { opacity:1; }
+
+    @media(max-width:1100px) { .notes-root { grid-template-columns:170px 240px 1fr; } .editor-body { grid-template-columns:1fr; } .info-pane { display:none; } }
+    @media(max-width:768px)  { .notes-root { grid-template-columns:1fr; height:auto; } .cat-pane,.list-pane { border-right:none; border-bottom:1px solid var(--border); height:auto; max-height:40vh; } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content" style="display:flex;flex-direction:column;">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <h2>Notes</h2>
+      </div>
+      <div class="flex items-center gap-sm">
+        <span class="save-indicator" id="saveIndicator">✓ Saved</span>
+        <button class="btn btn-primary btn-sm" id="newNoteBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Note
+        </button>
+      </div>
+    </header>
+
+    <div class="notes-root page-body">
+
+      <!-- Category pane -->
+      <div class="cat-pane" id="catPane"></div>
+
+      <!-- Notes list pane -->
+      <div class="list-pane">
+        <div class="list-search">
+          <div class="input-wrap">
+            <span class="input-icon"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input type="text" class="input input-icon-left" placeholder="Search notes…" id="noteSearch" style="width:100%"/>
+          </div>
+        </div>
+        <div class="notes-items" id="notesList"></div>
+      </div>
+
+      <!-- Editor pane -->
+      <div class="editor-pane" id="editorPane">
+        <div class="no-note-selected" id="noNoteMsg">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>Select a note or create a new one</p>
+          <button class="btn btn-ghost btn-sm" id="noNoteBtn">New Note</button>
+        </div>
+        <div id="editorContent" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden">
+          <div class="editor-head">
+            <div style="flex:1">
+              <div style="font-size:.68rem;color:var(--text-faint);margin-bottom:3px">Edit Note</div>
+              <input type="text" id="noteTitle" class="input" style="font-size:1rem;font-weight:600;background:none;border:none;padding:0;border-bottom:1px solid transparent;transition:border-color .15s" placeholder="Note title…"/>
+              <div id="noteTimestamp" style="font-size:.72rem;color:var(--text-faint);margin-top:3px"></div>
+            </div>
+            <div class="flex items-center gap-sm">
+              <select class="select" id="noteCat" style="font-size:.78rem;width:120px"></select>
+              <button class="btn btn-primary btn-sm" id="saveNoteBtn">Save</button>
+              <button class="btn btn-ghost btn-icon btn-sm" id="deleteNoteBtn" title="Delete note" style="color:var(--danger)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="editor-toolbar">
+            <button class="tbtn" onclick="insert('**','**')" title="Bold"><b>B</b></button>
+            <button class="tbtn" onclick="insert('*','*')" title="Italic"><em>I</em></button>
+            <button class="tbtn" onclick="insert('~~','~~')" title="Strikethrough" style="text-decoration:line-through">S</button>
+            <div class="tdivider"></div>
+            <button class="tbtn" onclick="insertLine('## ')" title="H2">H2</button>
+            <button class="tbtn" onclick="insertLine('### ')" title="H3">H3</button>
+            <div class="tdivider"></div>
+            <button class="tbtn" onclick="insertLine('- ')" title="Bullet">•</button>
+            <button class="tbtn" onclick="insertLine('1. ')" title="Numbered">1.</button>
+            <button class="tbtn" onclick="insertLine('- [ ] ')" title="Checklist">☑</button>
+            <div class="tdivider"></div>
+            <button class="tbtn" onclick="wrapCode()" title="Code block">&lt;/&gt;</button>
+            <button class="tbtn" onclick="insert('[','](url)')" title="Link">🔗</button>
+            <div class="tdivider"></div>
+            <button class="tbtn" onclick="insertLine('> ')" title="Quote">"</button>
+            <button class="tbtn" onclick="insertLine('---')" title="Divider">―</button>
+          </div>
+          <div class="editor-body">
+            <div class="editor-text-wrap">
+              <textarea class="editor-textarea" id="noteBody" placeholder="Start writing in Markdown…" spellcheck="false"></textarea>
+            </div>
+            <div class="info-pane">
+              <div class="info-row"><div class="lbl">Category</div><div class="val" id="ip-cat">—</div></div>
+              <div class="info-row"><div class="lbl">Created</div><div class="val" id="ip-created">—</div></div>
+              <div class="info-row"><div class="lbl">Updated</div><div class="val" id="ip-updated">—</div></div>
+              <div class="info-row"><div class="lbl">Length</div><div class="val" id="ip-length">0 words</div></div>
+              <div class="info-row" style="margin-top:auto">
+                <button class="btn btn-ghost btn-sm w-full" id="pinBtn">📌 Pin note</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Notes, timeAgo, formatDate } from '../js/data.js';
+
+renderSidebar('notes');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+let activeNote = null;
+let activeCategory = 'All Notes';
+let searchQuery = '';
+let saveTimer = null;
+
+// Populate category select in editor
+const CATS = ['JavaScript','TypeScript','Python','C#','SQL','Git','Linux','Supabase','Node.js','APIs','DevOps','Algorithms','General'];
+const catSelect = document.getElementById('noteCat');
+CATS.forEach(c => catSelect.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`));
+
+// ── Render categories ─────────────────────────────────────────
+function renderCats() {
+  const pane = document.getElementById('catPane');
+  pane.innerHTML = '';
+  const cats = Notes.categories();
+  const total = Notes.all().length;
+
+  const addItem = (label, cat) => {
+    const div = document.createElement('div');
+    div.className = 'cat-item' + (cat === activeCategory ? ' active' : '');
+    div.innerHTML = `<span>${label}</span><span class="cat-count">${label === 'All Notes' ? total : (cats[cat]||0)}</span>`;
+    div.addEventListener('click', () => { activeCategory = cat; renderCats(); renderList(); });
+    pane.appendChild(div);
+  };
+  addItem('All Notes', 'All Notes');
+  Object.keys(cats).sort().forEach(c => addItem(c, c));
+}
+
+// ── Render note list ──────────────────────────────────────────
+function renderList() {
+  const listEl = document.getElementById('notesList');
+  listEl.innerHTML = '';
+
+  let notes = searchQuery ? Notes.search(searchQuery) : Notes.byCategory(activeCategory);
+  notes = [...notes.filter(n=>n.pinned), ...notes.filter(n=>!n.pinned)];
+
+  if (!notes.length) {
+    listEl.innerHTML = `<div style="padding:var(--gap-xl);text-align:center;color:var(--text-faint);font-size:.825rem">No notes found</div>`;
+    return;
+  }
+  notes.forEach((n, i) => {
+    const div = document.createElement('div');
+    div.className = 'note-item' + (activeNote?.id === n.id ? ' active' : '');
+    div.style.animationDelay = (i * 0.04) + 's';
+    const preview = n.content.replace(/[#*`\-_>]/g,'').split('\n').filter(l=>l.trim()).slice(0,2).join(' ');
+    div.innerHTML = `
+      <div class="ni-title">${n.pinned ? '📌 ' : ''}${n.title}</div>
+      <div class="ni-preview">${preview.substring(0,70)}</div>
+      <div class="ni-meta">
+        <span class="tag" style="font-size:.62rem">${n.category}</span>
+        <span class="ni-time">${timeAgo(n.updatedAt)}</span>
+      </div>`;
+    div.addEventListener('click', () => openNote(n));
+    listEl.appendChild(div);
+  });
+}
+
+// ── Open note ─────────────────────────────────────────────────
+function openNote(n) {
+  activeNote = n;
+  renderList();
+
+  document.getElementById('noNoteMsg').style.display = 'none';
+  const ec = document.getElementById('editorContent');
+  ec.style.display = 'flex';
+  ec.classList.add('anim-fade-in');
+
+  document.getElementById('noteTitle').value = n.title;
+  document.getElementById('noteBody').value  = n.content;
+  document.getElementById('noteCat').value   = n.category;
+  document.getElementById('noteTimestamp').textContent = `Last updated ${timeAgo(n.updatedAt)}`;
+  document.getElementById('ip-cat').textContent     = n.category;
+  document.getElementById('ip-created').textContent = formatDate(n.createdAt);
+  document.getElementById('ip-updated').textContent = formatDate(n.updatedAt);
+  document.getElementById('ip-length').textContent  = countWords(n.content) + ' words';
+  document.getElementById('pinBtn').textContent     = n.pinned ? '📌 Unpin note' : '📌 Pin note';
+}
+
+function countWords(s) { return s.split(/\s+/).filter(Boolean).length; }
+
+// ── Auto-save ─────────────────────────────────────────────────
+['noteTitle','noteBody','noteCat'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(autoSave, 1200);
+    if (id === 'noteBody') {
+      document.getElementById('ip-length').textContent = countWords(document.getElementById('noteBody').value) + ' words';
+    }
+  });
+});
+
+function autoSave() {
+  if (!activeNote) return;
+  const data = {
+    title:    document.getElementById('noteTitle').value.trim() || 'Untitled',
+    content:  document.getElementById('noteBody').value,
+    category: document.getElementById('noteCat').value,
+  };
+  Notes.update(activeNote.id, data);
+  activeNote = Notes.get(activeNote.id);
+  document.getElementById('noteTimestamp').textContent = `Last updated just now`;
+  document.getElementById('ip-updated').textContent = 'just now';
+  const ind = document.getElementById('saveIndicator');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 2000);
+  renderList();
+  renderCats();
+}
+
+document.getElementById('saveNoteBtn').addEventListener('click', autoSave);
+
+// ── New note ──────────────────────────────────────────────────
+function createNote() {
+  const n = Notes.create({ title:'Untitled Note', content:'', category:'General' });
+  activeCategory = 'All Notes';
+  renderCats(); renderList();
+  openNote(n);
+  setTimeout(() => { document.getElementById('noteTitle').focus(); document.getElementById('noteTitle').select(); }, 100);
+}
+document.getElementById('newNoteBtn').addEventListener('click', createNote);
+document.getElementById('noNoteBtn').addEventListener('click', createNote);
+
+// ── Delete note ───────────────────────────────────────────────
+document.getElementById('deleteNoteBtn').addEventListener('click', () => {
+  if (!activeNote) return;
+  if (!confirm(`Delete "${activeNote.title}"?`)) return;
+  Notes.delete(activeNote.id);
+  activeNote = null;
+  document.getElementById('noNoteMsg').style.display = '';
+  document.getElementById('editorContent').style.display = 'none';
+  renderCats(); renderList();
+});
+
+// ── Pin ───────────────────────────────────────────────────────
+document.getElementById('pinBtn').addEventListener('click', () => {
+  if (!activeNote) return;
+  Notes.update(activeNote.id, { pinned: !activeNote.pinned });
+  activeNote = Notes.get(activeNote.id);
+  document.getElementById('pinBtn').textContent = activeNote.pinned ? '📌 Unpin note' : '📌 Pin note';
+  renderList();
+});
+
+// ── Search ────────────────────────────────────────────────────
+document.getElementById('noteSearch').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderList();
+});
+
+// ── Toolbar helpers ───────────────────────────────────────────
+window.insert = function(before, after='') {
+  const ta = document.getElementById('noteBody');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.substring(s, e);
+  const rep = before + (sel || 'text') + after;
+  ta.setRangeText(rep, s, e, 'select');
+  ta.focus();
+  clearTimeout(saveTimer); saveTimer = setTimeout(autoSave, 1200);
+};
+window.insertLine = function(prefix) {
+  const ta = document.getElementById('noteBody');
+  const s = ta.selectionStart;
+  const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
+  ta.setRangeText('\n' + prefix, s, s, 'end');
+  ta.focus();
+  clearTimeout(saveTimer); saveTimer = setTimeout(autoSave, 1200);
+};
+window.wrapCode = function() {
+  const ta = document.getElementById('noteBody');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.substring(s, e);
+  const rep = '```\n' + (sel||'code here') + '\n```';
+  ta.setRangeText(rep, s, e, 'select');
+  ta.focus();
+};
+
+// ── Init ──────────────────────────────────────────────────────
+renderCats();
+renderList();
+// Auto-open first note
+const first = Notes.all()[0];
+if (first) openNote(first);
+</script>
+</body>
+</html>

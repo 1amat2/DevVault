@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .gh-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--gap-lg); }
+    .star-count { display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--text-muted); }
+    .lang-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+    .repo-card { display:flex;align-items:center;gap:var(--gap-md);padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;transition:background .15s; }
+    .repo-card:hover { background:var(--elevated2); }
+    .connect-banner {
+      background:linear-gradient(135deg,rgba(124,92,255,.12),rgba(59,130,246,.08));
+      border:1px solid rgba(124,92,255,.3);
+      border-radius:var(--r-lg); padding:var(--gap-lg) var(--gap-xl);
+      display:flex; align-items:center; justify-content:space-between; gap:var(--gap-lg);
+      margin-bottom:var(--gap-lg);
+    }
+    @media(max-width:900px){ .gh-grid{grid-template-columns:1fr;} .connect-banner{flex-direction:column;} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <div class="flex items-center gap-sm">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          <h2>GitHub Overview</h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-sm">
+        <button class="btn btn-ghost btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          View Profile
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content page-body" style="display:flex;flex-direction:column;gap:var(--gap-lg)">
+
+      <!-- Connect banner (demo mode) -->
+      <div class="connect-banner anim-fade-up">
+        <div>
+          <div style="font-size:.875rem;font-weight:600;margin-bottom:4px">Connect GitHub Account</div>
+          <p style="margin:0;font-size:.8rem">Link your GitHub to sync real repositories, commits, and contribution data.</p>
+        </div>
+        <button class="btn btn-primary">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          Connect GitHub
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4 stagger">
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--primary)">
+          <div class="stat-label">Repositories</div>
+          <div class="stat-value" id="gh-repos">12</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--success)">
+          <div class="stat-label">Followers</div>
+          <div class="stat-value" id="gh-followers">48</div>
+          <div class="stat-delta up">▲ +4</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--info)">
+          <div class="stat-label">Following</div>
+          <div class="stat-value" id="gh-following">36</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="border-top:2px solid var(--warning)">
+          <div class="stat-label">Total Stars</div>
+          <div class="stat-value" id="gh-stars">128</div>
+        </div>
+      </div>
+
+      <div class="gh-grid">
+
+        <!-- Top Repos (generated from Projects store) -->
+        <div class="card">
+          <h4 style="margin-bottom:var(--gap-md)">Top Repositories</h4>
+          <div id="repoList" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+
+        <!-- Contribution Graph -->
+        <div class="card">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--gap-sm)">
+            <h4>Contribution Graph</h4>
+            <span style="font-size:.72rem;color:var(--text-faint)" id="contrib-count">87 contributions</span>
+          </div>
+          <div style="display:flex;gap:5px;align-items:flex-start;overflow-x:auto">
+            <div style="display:grid;grid-template-rows:repeat(7,12px);gap:3px;padding-top:1px">
+              <span></span>
+              <span style="font-size:.58rem;color:var(--text-faint);line-height:12px">Mon</span>
+              <span></span>
+              <span style="font-size:.58rem;color:var(--text-faint);line-height:12px">Wed</span>
+              <span></span>
+              <span style="font-size:.58rem;color:var(--text-faint);line-height:12px">Fri</span>
+              <span></span>
+            </div>
+            <div id="fullHeatmap"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:.68rem;color:var(--text-faint)">Less</span>
+            <div class="heatmap-cell"></div>
+            <div class="heatmap-cell l1"></div>
+            <div class="heatmap-cell l2"></div>
+            <div class="heatmap-cell l3"></div>
+            <div class="heatmap-cell l4"></div>
+            <span style="font-size:.68rem;color:var(--text-faint)">More</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Language breakdown -->
+      <div class="card anim-fade-up">
+        <h4 style="margin-bottom:var(--gap-md)">Language Breakdown</h4>
+        <div style="display:flex;flex-direction:column;gap:var(--gap-sm)" id="langBreakdown"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, timeAgo } from '../js/data.js';
+
+renderSidebar('github');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+// ── Animated counters ─────────────────────────────────────────
+function animCount(el, target, dur=800) {
+  if (!el) return;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now-start)/dur,1);
+    el.textContent = Math.round((1-Math.pow(1-t,3))*target);
+    if (t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+setTimeout(()=>{
+  animCount(document.getElementById('gh-repos'),     12);
+  animCount(document.getElementById('gh-followers'), 48, 1000);
+  animCount(document.getElementById('gh-following'), 36, 900);
+  animCount(document.getElementById('gh-stars'),    128, 1200);
+},200);
+
+// ── Repos from projects store ─────────────────────────────────
+const repoList = document.getElementById('repoList');
+const stars = [12,8,6,4,3,2];
+const reposWithUrl = Projects.all().filter(p=>p.repo).slice(0,5);
+if (reposWithUrl.length === 0) {
+  repoList.innerHTML = `
+    <div style="text-align:center;padding:var(--gap-xl) 0;color:var(--text-faint)">
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:.4;margin-bottom:8px"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <div style="font-size:.82rem;margin-bottom:4px">No repositories linked yet</div>
+      <div style="font-size:.75rem">Add a repo URL to your projects to see them here.</div>
+    </div>`;
+} else {
+  reposWithUrl.forEach((p,i)=>{
+    const div = document.createElement('div');
+    div.className = 'repo-card anim-fade-up';
+    div.style.animationDelay = (i*.07)+'s';
+    div.innerHTML = `
+      <div style="width:28px;height:28px;border-radius:50%;background:${p.color}20;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;font-weight:700;color:${p.color}">${p.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;font-weight:600;color:var(--text)">${p.name}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">Updated ${timeAgo(p.updatedAt)}</div>
+      </div>
+      <div class="star-count">
+        <svg width="12" height="12" fill="var(--warning)" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        ${stars[i]||1}
+      </div>`;
+    repoList.appendChild(div);
+  });
+}
+
+// ── Language breakdown ────────────────────────────────────────
+const langs = [
+  {name:'JavaScript',pct:55,color:'#F7DF1E'},
+  {name:'Python',    pct:20,color:'#3776AB'},
+  {name:'CSS',       pct:15,color:'#264de4'},
+  {name:'TypeScript',pct:10,color:'#3B82F6'},
+];
+const lb = document.getElementById('langBreakdown');
+langs.forEach(l => {
+  lb.insertAdjacentHTML('beforeend',`
+    <div class="flex items-center gap-md" style="padding:5px 0;border-bottom:1px solid var(--border)">
+      <div class="lang-dot" style="background:${l.color}"></div>
+      <span style="flex:1;font-size:.85rem">${l.name}</span>
+      <span style="font-size:.8rem;color:var(--text-muted);width:36px;text-align:right">${l.pct}%</span>
+      <div class="progress-bar" style="width:160px"><div class="fill" style="width:${l.pct}%;background:${l.color}"></div></div>
+    </div>`);
+});
+
+// ── Full heatmap ──────────────────────────────────────────────
+const container = document.getElementById('fullHeatmap');
+const grid = document.createElement('div');
+grid.style.cssText = 'display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;gap:3px;';
+let total = 0;
+for (let i = 0; i < 52*7; i++) {
+  const r = Math.random();
+  const lvl = r<0.42 ? 0 : r<0.58 ? 1 : r<0.73 ? 2 : r<0.88 ? 3 : 4;
+  total += lvl;
+  const cell = document.createElement('div');
+  cell.className = 'heatmap-cell' + (lvl>0?` l${lvl}`:'');
+  cell.style.cssText = 'width:12px;height:12px;border-radius:2px;';
+  cell.title = `${lvl} contributions`;
+  grid.appendChild(cell);
+}
+container.appendChild(grid);
+document.getElementById('contrib-count').textContent = total + ' contributions this year';
+</script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--gap-md); margin-bottom:var(--gap-lg); }
+    .dash-grid  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--gap-md); }
+    .col-2 { grid-column:span 2; }
+    .col-3 { grid-column:span 3; }
+
+    /* stat card polished */
+    .stat-card { position:relative; overflow:hidden; cursor:default; }
+    .stat-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:var(--stat-accent, var(--primary));
+    }
+    .stat-card:hover { box-shadow:0 4px 24px rgba(0,0,0,.4); border-color:var(--border-light); transform:translateY(-2px); }
+    .stat-card { transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+
+    .streak-badge { display:flex; align-items:center; gap:6px; }
+    .fire { font-size:1.2rem; animation:glowPulse 2s ease-in-out infinite; }
+
+    /* focus card */
+    .focus-block {
+      background:linear-gradient(135deg,rgba(124,92,255,.08),rgba(124,92,255,.02));
+      border:1px solid rgba(124,92,255,.25);
+      border-radius:var(--r-md); padding:var(--gap-md);
+    }
+
+    /* activity dot colors */
+    .adot-commit  { background:#3B82F6; }
+    .adot-task    { background:#22C55E; }
+    .adot-note    { background:#7C5CFF; }
+    .adot-branch  { background:#F59E0B; }
+    .adot-issue   { background:#EF4444; }
+    .adot-project { background:#EC4899; }
+
+    /* project cards in grid */
+    .proj-mini {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:var(--gap-md);
+      display:flex; flex-direction:column; gap:var(--gap-sm);
+      cursor:pointer; transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      text-decoration:none; color:inherit;
+    }
+    .proj-mini:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,.45); border-color:var(--border-light); }
+
+    /* heatmap */
+    .heatmap-wrap { overflow-x:auto; }
+
+    @media(max-width:1100px){ .dash-grid{grid-template-columns:1fr 1fr;} .col-2{grid-column:span 1;} .col-3{grid-column:span 2;} }
+    @media(max-width:700px) { .dash-grid{grid-template-columns:1fr;} .col-2,.col-3{grid-column:span 1;} .stats-row{grid-template-columns:1fr 1fr;} }
+    @media(max-width:400px) { .stats-row{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">…</div>
+      <div class="user-info">
+        <div class="user-name">Loading…</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <div>
+          <h2 id="greeting" style="font-size:1.2rem">Welcome 👋</h2>
+          <p style="margin:0;font-size:.78rem">Keep building, keep shipping.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-sm">
+        <div class="input-wrap">
+          <span class="input-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input type="text" class="input input-icon-left" placeholder="Search…" style="width:200px" id="globalSearch"/>
+        </div>
+        <button class="btn btn-ghost btn-icon" title="Notifications" style="position:relative">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid var(--surface)"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content page-body">
+
+      <!-- Stats Row -->
+      <div class="stats-row stagger">
+        <div class="stat-card anim-fade-up" style="--stat-accent:var(--primary)">
+          <div class="stat-label">Active Projects</div>
+          <div class="stat-value count-up" data-target="0" id="stat-projects">0</div>
+          <div class="stat-sub">running now</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="--stat-accent:var(--warning)">
+          <div class="stat-label">Tasks Pending</div>
+          <div class="stat-value count-up" data-target="0" id="stat-tasks">0</div>
+          <div class="stat-sub">need attention</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="--stat-accent:var(--info)">
+          <div class="stat-label">Commits This Week</div>
+          <div class="stat-value count-up" data-target="0" id="stat-commits">0</div>
+          <div class="stat-sub"><span class="stat-delta up">▲ 115%</span> vs last week</div>
+        </div>
+        <div class="stat-card anim-fade-up" style="--stat-accent:var(--danger)">
+          <div class="stat-label">Streak</div>
+          <div class="streak-badge">
+            <span class="stat-value count-up" data-target="0" id="stat-streak">0</span>
+            <span class="fire">🔥</span>
+          </div>
+          <div class="stat-sub">days in a row</div>
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="dash-grid">
+
+        <!-- Current Focus -->
+        <div class="card anim-fade-up" style="display:flex;flex-direction:column;gap:var(--gap-md)">
+          <div class="flex items-center justify-between">
+            <h4 style="color:var(--primary);text-transform:uppercase;font-size:.68rem;letter-spacing:.1em;font-weight:700">⚡ Current Focus</h4>
+            <span id="focus-priority" class="badge badge-danger" style="font-size:.6rem">Critical</span>
+          </div>
+          <div class="focus-block">
+            <div id="focus-title" style="font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:3px">—</div>
+            <div id="focus-project" style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px">—</div>
+            <div class="flex items-center justify-between" style="margin-bottom:5px">
+              <span style="font-size:.72rem;color:var(--text-muted)">Progress</span>
+              <span id="focus-pct" style="font-size:.72rem;font-weight:700">0%</span>
+            </div>
+            <div class="progress-bar"><div id="focus-bar" class="fill" style="width:0%"></div></div>
+          </div>
+          <div id="focus-due" style="font-size:.75rem;color:var(--text-faint)">—</div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--gap-md)">
+            <h4>Recent Activity</h4>
+          </div>
+          <div id="activity-feed" style="display:flex;flex-direction:column"></div>
+        </div>
+
+        <!-- Projects Overview Donut -->
+        <div class="card" style="display:flex;flex-direction:column;gap:var(--gap-md)">
+          <h4>Projects Overview</h4>
+          <div style="display:flex;align-items:center;gap:var(--gap-lg)">
+            <div style="position:relative;width:110px;height:110px;flex-shrink:0">
+              <svg id="projects-donut" width="110" height="110" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="42" fill="none" stroke="var(--elevated2)" stroke-width="14"/>
+              </svg>
+              <div class="donut-center-text">
+                <div class="donut-center-value" id="donut-total">0</div>
+                <div class="donut-center-label">Total</div>
+              </div>
+            </div>
+            <div class="chart-legend" id="donut-legend"></div>
+          </div>
+        </div>
+
+        <!-- Upcoming Tasks -->
+        <div class="card col-2">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--gap-md)">
+            <h4>Upcoming Tasks</h4>
+            <a href="tasks.html" class="btn btn-ghost btn-sm">View all →</a>
+          </div>
+          <div id="upcoming-tasks" style="display:flex;flex-direction:column"></div>
+        </div>
+
+        <!-- GitHub Activity Heatmap -->
+        <div class="card">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--gap-sm)">
+            <h4>GitHub Activity</h4>
+            <a href="github.html" class="btn btn-ghost btn-sm">More</a>
+          </div>
+          <div style="font-size:.68rem;color:var(--text-faint);display:flex;gap:16px;margin-bottom:5px;padding-left:2px">
+            <span>Mon</span><span>Wed</span><span>Fri</span>
+          </div>
+          <div class="heatmap-wrap"><div id="mini-heatmap"></div></div>
+          <div style="font-size:.72rem;color:var(--text-faint);margin-top:6px">37 contributions this week</div>
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="card col-3">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--gap-md)">
+            <h4>Recent Projects</h4>
+            <a href="projects.html" class="btn btn-ghost btn-sm">View all →</a>
+          </div>
+          <div class="grid-3" id="recent-projects"></div>
+        </div>
+
+      </div><!-- /dash-grid -->
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar }                          from '../components/sidebar.js';
+import { Projects, Tasks, Activity, Stats, Profile, timeAgo, formatDate, priorityColor, statusBadge } from '../js/data.js';
+
+renderSidebar('dashboard');
+
+// Mobile nav
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+// ── Greeting ──────────────────────────────────────────────────
+const profile = Profile.get();
+const h = new Date().getHours();
+const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+const name = profile.name.split(' ')[0];
+document.getElementById('greeting').textContent = `${greet}, ${name} 👋`;
+
+// ── Animated counter ──────────────────────────────────────────
+function animateCount(el, target, duration=900) {
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(ease * target);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+const stats = Stats.compute();
+setTimeout(() => {
+  animateCount(document.getElementById('stat-projects'), stats.activeProjects);
+  animateCount(document.getElementById('stat-tasks'),    stats.pendingTasks);
+  animateCount(document.getElementById('stat-commits'),  stats.commitsThisWeek, 1200);
+  animateCount(document.getElementById('stat-streak'),   stats.streak, 1400);
+}, 200);
+
+// ── Current Focus (highest-priority in-progress task) ─────────
+const inProgress = Tasks.byStatus('in-progress').sort((a,b) => {
+  const order = {critical:0,high:1,medium:2,low:3};
+  return (order[a.priority]||3) - (order[b.priority]||3);
+});
+if (inProgress.length) {
+  const t = inProgress[0];
+  const proj = Projects.get(t.projectId);
+  document.getElementById('focus-title').textContent   = t.title;
+  document.getElementById('focus-project').textContent = proj ? proj.name : '';
+  document.getElementById('focus-pct').textContent     = proj ? proj.progress + '%' : '';
+  document.getElementById('focus-bar').style.width     = (proj?.progress || 0) + '%';
+  const pMap = {critical:'badge-danger',high:'badge-warning',medium:'badge-info',low:'badge-success'};
+  const pb = document.getElementById('focus-priority');
+  pb.className = `badge ${pMap[t.priority] || 'badge-muted'}`;
+  pb.textContent = t.priority.charAt(0).toUpperCase() + t.priority.slice(1);
+  document.getElementById('focus-due').textContent = t.dueDate ? `Due ${formatDate(t.dueDate)}` : 'No deadline set';
+}
+
+// ── Activity Feed ─────────────────────────────────────────────
+const dotClass = { commit:'adot-commit', task:'adot-task', note:'adot-note', branch:'adot-branch', issue:'adot-issue', project:'adot-project' };
+const feed = document.getElementById('activity-feed');
+Activity.recent(6).forEach((a, i) => {
+  const item = document.createElement('div');
+  item.className = 'activity-item anim-fade-up';
+  item.style.animationDelay = (0.05 + i * 0.06) + 's';
+  item.innerHTML = `
+    <div class="activity-dot ${dotClass[a.type] || ''}"></div>
+    <div class="activity-text" style="flex:1"><strong>${a.text}</strong><br><span style="font-size:.72rem">${a.project}</span></div>
+    <span class="activity-time">${timeAgo(a.time)}</span>`;
+  feed.appendChild(item);
+});
+
+// ── Projects Donut ────────────────────────────────────────────
+const allProjects = Projects.all();
+const groups = { active:0, hold:0, completed:0, planning:0 };
+allProjects.forEach(p => { if (groups[p.status] !== undefined) groups[p.status]++; else groups.planning++; });
+document.getElementById('donut-total').textContent = allProjects.length;
+
+const colors  = { active:'#22C55E', hold:'#F59E0B', completed:'#7C5CFF', planning:'#3B82F6' };
+const labels  = { active:'Active', hold:'On Hold', completed:'Done', planning:'Planning' };
+const r = 42, circ = 2 * Math.PI * r;
+const svg = document.getElementById('projects-donut');
+let offset = 0;
+const legend = document.getElementById('donut-legend');
+
+Object.entries(groups).forEach(([key, val]) => {
+  if (!val) return;
+  const dash = (val / allProjects.length) * circ;
+  const arc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  arc.setAttribute('cx','55'); arc.setAttribute('cy','55'); arc.setAttribute('r', r);
+  arc.setAttribute('fill','none'); arc.setAttribute('stroke', colors[key]); arc.setAttribute('stroke-width','14');
+  arc.style.cssText = `stroke-dasharray:${dash} ${circ};stroke-dashoffset:${-offset};transition:stroke-dashoffset .5s ease`;
+  arc.setAttribute('transform','rotate(-90 55 55)');
+  arc.classList.add('donut-arc');
+  svg.appendChild(arc);
+  offset += dash;
+  legend.insertAdjacentHTML('beforeend', `
+    <div class="legend-item anim-fade-up" style="animation-delay:${offset/circ*0.3}s">
+      <div class="legend-dot" style="background:${colors[key]}"></div>
+      <span style="flex:1;color:var(--text-muted)">${labels[key]}</span>
+      <span style="font-weight:600">${val}</span>
+    </div>`);
+});
+
+// ── Upcoming Tasks ────────────────────────────────────────────
+const upcoming = Tasks.pending()
+  .sort((a,b) => { const o={critical:0,high:1,medium:2,low:3}; return (o[a.priority]||3)-(o[b.priority]||3); })
+  .slice(0,5);
+const utContainer = document.getElementById('upcoming-tasks');
+const pBadge = { critical:'badge-danger', high:'badge-warning', medium:'badge-info', low:'badge-success' };
+upcoming.forEach((t, i) => {
+  const div = document.createElement('div');
+  div.className = 'anim-fade-up';
+  div.style.cssText = `display:flex;align-items:center;gap:var(--gap-sm);padding:7px 0;border-bottom:1px solid var(--border);animation-delay:${0.05+i*0.06}s`;
+  div.innerHTML = `
+    <div class="task-checkbox" data-id="${t.id}" style="width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s"></div>
+    <span style="flex:1;font-size:.825rem;color:var(--text)">${t.title}</span>
+    <span class="badge ${pBadge[t.priority]||'badge-muted'}" style="font-size:.62rem">${t.priority}</span>`;
+  utContainer.appendChild(div);
+});
+utContainer.querySelectorAll('.task-checkbox').forEach(cb => {
+  cb.addEventListener('click', () => {
+    const isDone = cb.classList.toggle('checked');
+    if (isDone) {
+      cb.style.cssText += 'background:var(--success);border-color:var(--success);';
+      cb.innerHTML = '<span style="color:#fff;font-size:9px;font-weight:700">✓</span>';
+      Tasks.move(cb.dataset.id, 'done');
+    } else {
+      cb.style.background = ''; cb.style.borderColor = ''; cb.innerHTML = '';
+      Tasks.move(cb.dataset.id, 'todo');
+    }
+  });
+});
+
+// ── Mini Heatmap ──────────────────────────────────────────────
+const hmContainer = document.getElementById('mini-heatmap');
+const hmGrid = document.createElement('div');
+hmGrid.style.cssText = 'display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;gap:3px;';
+// generate 8 weeks of semi-random data
+const seed = [0,1,2,3,2,1,0,1,3,4,3,2,1,0,2,3,4,3,2,1,2,0,1,2,3,4,3,2,1,0,1,2,3,2,3,4,3,2,1,0,1,2,3,4,0,0,1,2,3,4,3,4,2,1,4];
+seed.forEach(v => {
+  const c = document.createElement('div');
+  c.className = 'heatmap-cell' + (v>0?` l${v}`:'');
+  c.style.cssText = 'width:12px;height:12px;border-radius:2px;';
+  hmGrid.appendChild(c);
+});
+hmContainer.appendChild(hmGrid);
+
+// ── Recent Projects ───────────────────────────────────────────
+const recentProjs = Projects.all().sort((a,b) => new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,3);
+const rpContainer = document.getElementById('recent-projects');
+recentProjs.forEach((p, i) => {
+  const a = document.createElement('a');
+  a.href = `project.html?id=${p.id}`;
+  a.className = 'proj-mini anim-fade-up';
+  a.style.animationDelay = (0.1 + i * 0.08) + 's';
+  a.innerHTML = `
+    <div class="flex items-center gap-sm">
+      <div style="width:36px;height:36px;border-radius:var(--r-md);background:${p.color}20;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${p.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.875rem;font-weight:600;color:var(--text)">${p.name}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">${p.description.substring(0,40)}…</div>
+      </div>
+      <span class="badge ${statusBadge(p.status)}" style="font-size:.6rem">${p.status}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${p.tech.slice(0,3).map(t=>`<span class="tag" style="font-size:.65rem">${t}</span>`).join('')}</div>
+    <div style="margin-top:8px">
+      <div class="flex items-center justify-between" style="margin-bottom:4px">
+        <span style="font-size:.7rem;color:var(--text-muted)">Progress</span>
+        <span style="font-size:.72rem;font-weight:700">${p.progress}%</span>
+      </div>
+      <div class="progress-bar"><div class="fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+    </div>
+    <div style="font-size:.7rem;color:var(--text-faint);margin-top:4px">Updated ${timeAgo(p.updatedAt)}</div>`;
+  rpContainer.appendChild(a);
+});
+</script>
+</body>
+</html>

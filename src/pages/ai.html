@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Assistant — DevVault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/variables.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <link rel="stylesheet" href="../css/responsive.css"/>
+  <style>
+    .ai-shell { display:flex; flex-direction:column; height:calc(100vh - 65px); }
+    .quick-bar {
+      display:flex; gap:var(--gap-sm); flex-wrap:wrap;
+      padding:var(--gap-sm) var(--gap-lg);
+      border-bottom:1px solid var(--border);
+      background:var(--surface);
+    }
+    .qbtn {
+      display:flex; align-items:center; gap:6px;
+      padding:6px 14px; background:var(--elevated);
+      border:1px solid var(--border); border-radius:var(--r-full);
+      font-size:.78rem; color:var(--text-muted);
+      cursor:pointer; transition:all .15s;
+    }
+    .qbtn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-dim); }
+    .chat-messages { flex:1; overflow-y:auto; padding:var(--gap-xl) var(--gap-xl); display:flex; flex-direction:column; gap:var(--gap-lg); }
+    .msg-row { display:flex; flex-direction:column; }
+    .msg-row.user { align-items:flex-end; }
+    .msg-meta { display:flex; align-items:center; gap:var(--gap-sm); margin-bottom:5px; }
+    .ai-avatar-sm {
+      width:28px; height:28px; border-radius:50%;
+      background:var(--primary-dim); border:1.5px solid var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.68rem; font-weight:800; color:var(--primary); flex-shrink:0;
+    }
+    .bubble {
+      padding:var(--gap-md) var(--gap-lg); border-radius:var(--r-lg);
+      font-size:.875rem; line-height:1.75; max-width:680px;
+      animation:fadeUp .25s ease both;
+    }
+    .bubble.ai   { background:var(--elevated); border:1px solid var(--border); border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 4px; color:var(--text); }
+    .bubble.user { background:var(--primary-dim); border:1px solid rgba(124,92,255,.4); border-radius:var(--r-lg) var(--r-lg) 4px var(--r-lg); color:var(--text); }
+    .msg-time { font-size:.68rem; color:var(--text-faint); margin-top:4px; }
+    .bubble ul { padding-left:16px; margin-top:8px; display:flex; flex-direction:column; gap:4px; }
+    .bubble li  { color:var(--text-muted); }
+    .bubble strong { color:var(--text); }
+    .open-task-btn {
+      display:inline-flex; align-items:center; gap:6px; margin-top:10px;
+      padding:6px 14px; background:var(--elevated2); border:1px solid var(--border);
+      border-radius:var(--r-sm); font-size:.78rem; color:var(--text-muted); cursor:pointer;
+      transition:all .15s;
+    }
+    .open-task-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .typing-row { display:flex; align-items:center; gap:var(--gap-sm); }
+    .typing-dots { display:flex; gap:4px; padding:10px 14px; background:var(--elevated); border:1px solid var(--border); border-radius:var(--r-lg); }
+    .chat-footer { border-top:1px solid var(--border); padding:var(--gap-md) var(--gap-xl); background:var(--surface); }
+    .chat-bar {
+      display:flex; align-items:center; gap:var(--gap-sm);
+      background:var(--elevated); border:1px solid var(--border);
+      border-radius:var(--r-xl); padding:8px 12px;
+      transition:border-color .18s, box-shadow .18s;
+    }
+    .chat-bar:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-dim); }
+    .chat-input { flex:1; font-size:.875rem; color:var(--text); }
+    .chat-input::placeholder { color:var(--text-faint); }
+    .send-btn { width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,transform .12s; }
+    .send-btn:hover { background:var(--primary-hover); }
+    .send-btn:active { transform:scale(.92); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!--
+  DEVVAULT SIDEBAR — embed this <aside> directly in every page.
+  The sidebar.js module sets .active and updates profile data at runtime.
+  Rendering it inline means ZERO blank flash on page load.
+-->
+<aside class="sidebar" id="sidebar">
+
+  <a class="sidebar-logo" href="index.html">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <span class="logo-name">DevVault</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="index.html"     class="nav-item" data-id="dashboard">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a href="projects.html"  class="nav-item" data-id="projects">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Projects</span>
+    </a>
+    <a href="tasks.html"     class="nav-item" data-id="tasks">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+    <a href="notes.html"     class="nav-item" data-id="notes">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Notes</span>
+    </a>
+    <a href="doc.html"       class="nav-item" data-id="doc">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Documentation</span>
+    </a>
+    <a href="github.html"    class="nav-item" data-id="github">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a href="learning.html"  class="nav-item" data-id="learning">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learning</span>
+    </a>
+    <a href="analytics.html" class="nav-item" data-id="analytics">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ai.html"        class="nav-item" data-id="ai">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      <span>AI Assistant</span>
+    </a>
+    <a href="portfolio.html" class="nav-item" data-id="portfolio">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span>Portfolio</span>
+    </a>
+    <a href="settings.html"  class="nav-item" data-id="settings">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">�</div>
+      <div class="user-info">
+        <div class="user-name">Loading�</div>
+        <div class="user-handle"></div>
+      </div>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+  <main class="main-content" style="display:flex;flex-direction:column;">
+    <header class="page-header">
+      <div class="flex items-center gap-md">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <div class="ai-avatar-sm" style="width:36px;height:36px;font-size:.78rem">AI</div>
+        <div>
+          <h3 style="font-size:1rem">DevVault AI</h3>
+          <div style="font-size:.7rem;display:flex;align-items:center;gap:4px;color:var(--success)">
+            <div class="status-online" style="width:6px;height:6px;border-radius:50%;background:var(--success)"></div>
+            Ready
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="clearChat">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        New Chat
+      </button>
+    </header>
+
+    <div class="quick-bar">
+      <button class="qbtn" data-q="What should I work on next?">💡 What to work on next?</button>
+      <button class="qbtn" data-q="Summarize my projects">📋 Summarize my projects</button>
+      <button class="qbtn" data-q="Explain async/await">🧠 Explain async/await</button>
+      <button class="qbtn" data-q="Generate project ideas">✨ Generate project ideas</button>
+    </div>
+
+    <div class="ai-shell page-body">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-footer">
+        <div class="chat-bar">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your projects…"/>
+          <button class="send-btn" id="sendBtn">
+            <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div style="text-align:center;margin-top:6px;font-size:.68rem;color:var(--text-faint)">AI responses are simulated. Connect an OpenAI API key for real AI.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { renderSidebar } from '../components/sidebar.js';
+import { Projects, Tasks, Notes, Profile, timeAgo } from '../js/data.js';
+
+renderSidebar('ai');
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+const profile = Profile.get();
+const firstName = profile.name.split(' ')[0];
+
+// ── Build dynamic context ─────────────────────────────────────
+function buildContext() {
+  const projects  = Projects.all();
+  const pending   = Tasks.pending();
+  const inProgress = Tasks.byStatus('in-progress');
+  const critical  = pending.filter(t => t.priority === 'critical');
+  return { projects, pending, inProgress, critical };
+}
+
+// ── AI response generator ─────────────────────────────────────
+function getAIResponse(msg) {
+  const { projects, pending, inProgress, critical } = buildContext();
+  const lmsg = msg.toLowerCase();
+
+  if (lmsg.includes('work on next') || lmsg.includes('priority') || lmsg.includes('should i do')) {
+    const top = inProgress.sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return o[a.priority]-o[b.priority];})[0];
+    const proj = top ? Projects.get(top.projectId) : null;
+    return `Based on your current workload, I recommend focusing on <strong>${top?.title || 'your most critical task'}</strong>${proj ? ` in <strong>${proj.name}</strong>` : ''}.<br><br>
+You have <strong>${critical.length} critical</strong> and <strong>${pending.filter(t=>t.priority==='high').length} high-priority</strong> tasks pending. 
+${critical.length > 0 ? `<br><br>🚨 Critical tasks need your immediate attention.` : ''}`;
+  }
+
+  if (lmsg.includes('summarize') || lmsg.includes('overview') || lmsg.includes('status')) {
+    const active = projects.filter(p=>p.status==='active');
+    return `Here's your current status, ${firstName}:<br><br>
+<strong>Projects</strong><br>
+${active.map(p=>`• <strong>${p.name}</strong> — ${p.progress}% complete (${p.status})`).join('<br>')}<br><br>
+<strong>Tasks</strong><br>
+• ${Tasks.byStatus('in-progress').length} in progress<br>
+• ${Tasks.byStatus('todo').length} in todo<br>
+• ${Tasks.byStatus('done').length} completed total<br><br>
+Your most active project is <strong>${active.sort((a,b)=>b.progress-a.progress)[0]?.name || 'none'}</strong>.`;
+  }
+
+  if (lmsg.includes('async') || lmsg.includes('await') || lmsg.includes('promise')) {
+    return `<strong>Async/Await</strong> is syntactic sugar over Promises in JavaScript.<br><br>
+Instead of chaining <code style="background:var(--elevated2);padding:1px 5px;border-radius:3px;font-size:.82rem">.then()</code>, you can write asynchronous code that looks synchronous:<br><br>
+<code style="display:block;background:var(--elevated2);padding:10px 12px;border-radius:var(--r-sm);font-size:.8rem;margin-top:6px;font-family:monospace;line-height:1.7">async function getData() {<br>  try {<br>    const res = await fetch('/api/data');<br>    return await res.json();<br>  } catch (err) {<br>    console.error(err);<br>  }<br>}</code><br>
+Key rules: <strong>async</strong> functions always return a Promise. <strong>await</strong> can only be used inside async functions.`;
+  }
+
+  if (lmsg.includes('project idea') || lmsg.includes('what should i build')) {
+    return `Based on your tech stack, here are some project ideas:<br><br>
+1. 🔐 <strong>Auth Boilerplate</strong> — Supabase + Next.js auth starter<br>
+2. 📊 <strong>CLI Analytics Tool</strong> — Track coding time from the terminal<br>
+3. 🤖 <strong>GitHub Readme Generator</strong> — AI-powered README creator<br>
+4. 📝 <strong>API Documentation Builder</strong> — Auto-generate docs from code<br>
+5. 🗂 <strong>Personal Finance Tracker</strong> — Node.js + PostgreSQL<br><br>
+Want me to create tasks and a project plan for any of these?`;
+  }
+
+  if (lmsg.includes('readme') || lmsg.includes('documentation') || lmsg.includes('docs')) {
+    const proj = projects[0];
+    return `I can generate a README for <strong>${proj?.name || 'your project'}</strong>.<br><br>
+Here's what I'd include based on your project data:<br><br>
+• 📌 Project title and description<br>
+• 🛠 Tech stack: ${(proj?.tech||['HTML','CSS','JS']).join(', ')}<br>
+• 🚀 Getting started guide<br>
+• 📁 Folder structure<br>
+• 🔧 Environment variables<br>
+• 📄 License<br><br>
+Connect an OpenAI API key in Settings to generate actual documentation.`;
+  }
+
+  if (lmsg.includes('note') || lmsg.includes('knowledge')) {
+    const n = Notes.all().length;
+    return `You have <strong>${n} notes</strong> in your knowledge base${n > 0 ? `, covering categories like ${Object.keys(Notes.categories()).slice(0,3).join(', ')}` : ''}.<br><br>
+You can search across all your notes from the Notes page. I can also help you organize, summarize, or expand any of your notes.`;
+  }
+
+  // Default
+  return `I understand you're asking about "<strong>${msg}</strong>".<br><br>
+Based on your current projects and tasks, here's what I can tell you:<br><br>
+• You have <strong>${projects.filter(p=>p.status==='active').length} active projects</strong> in progress<br>
+• <strong>${pending.length} tasks</strong> still need attention<br>
+• Your streak is at <strong>${Profile.get().streak} days</strong> 🔥<br><br>
+Ask me anything more specific about your projects, tasks, code, or development workflow!`;
+}
+
+// ── Render message ────────────────────────────────────────────
+function addMessage(html, isUser=false) {
+  const container = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (isUser ? ' user' : '');
+  if (!isUser) {
+    row.innerHTML = `
+      <div class="msg-meta">
+        <div class="ai-avatar-sm">AI</div>
+        <span style="font-size:.78rem;font-weight:600">DevVault AI</span>
+      </div>
+      <div class="bubble ai">${html}</div>
+      <div class="msg-time">just now</div>`;
+  } else {
+    row.innerHTML = `<div class="bubble user">${html}</div><div class="msg-time">just now</div>`;
+  }
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+  return row;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typingRow';
+  row.innerHTML = `
+    <div class="ai-avatar-sm">AI</div>
+    <div class="typing-dots">
+      <div class="typing-dot" style="width:7px;height:7px;border-radius:50%;background:var(--primary)"></div>
+      <div class="typing-dot" style="width:7px;height:7px;border-radius:50%;background:var(--primary)"></div>
+      <div class="typing-dot" style="width:7px;height:7px;border-radius:50%;background:var(--primary)"></div>
+    </div>`;
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+function hideTyping() { document.getElementById('typingRow')?.remove(); }
+
+function sendMessage(text) {
+  if (!text.trim()) return;
+  addMessage(text, true);
+  document.getElementById('chatInput').value = '';
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMessage(getAIResponse(text));
+  }, 800 + Math.random()*400);
+}
+
+// ── Quick buttons ─────────────────────────────────────────────
+document.querySelectorAll('.qbtn').forEach(btn => {
+  btn.addEventListener('click', () => sendMessage(btn.dataset.q));
+});
+
+// ── Send ──────────────────────────────────────────────────────
+document.getElementById('sendBtn').addEventListener('click', () => sendMessage(document.getElementById('chatInput').value));
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(document.getElementById('chatInput').value); }
+});
+document.getElementById('clearChat').addEventListener('click', () => {
+  document.getElementById('chatMessages').innerHTML = '';
+  showWelcome();
+});
+
+// ── Welcome message ───────────────────────────────────────────
+function showWelcome() {
+  addMessage(`Hi <strong>${firstName}</strong>! 👋 How can I help you today?<br><br>
+I have context about your <strong>${Projects.all().length} projects</strong>, <strong>${Tasks.pending().length} pending tasks</strong>, and <strong>${Notes.all().length} notes</strong>.<br><br>
+You can ask me to:
+<ul>
+  <li>Prioritize your work</li>
+  <li>Explain code concepts</li>
+  <li>Summarize your project status</li>
+  <li>Generate documentation</li>
+  <li>Suggest what to build next</li>
+</ul>`);
+}
+showWelcome();
+</script>
+</body>
+</html>
